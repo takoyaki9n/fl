@@ -31,8 +31,11 @@ let rec n2i n =
   | S m -> 1 + (n2i m);;
   
 let rec i2n i =
-  match i with 
-  | _ when i < 0 -> raise Negative_number
-  | 0 -> Z
-  | _ -> S (i2n (i - 1));;
+  if i < 0 then
+    raise Negative_number
+  else
+    if n = 0 then
+      Z
+    else
+      S (i2n (i - 1));;
   
