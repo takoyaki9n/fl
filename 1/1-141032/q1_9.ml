@@ -10,7 +10,7 @@ let rec pick_one_list xs =
   
 let rec perm xs =
   match xs with
-  | [] -> []
+  | [] -> [[]]
   | [y] -> [[y]]
   | ys -> 
      let ts = pick_one_list ys
