@@ -34,7 +34,7 @@ let rec i2n i =
   if i < 0 then
     raise Negative_number
   else
-    if n = 0 then
+    if i = 0 then
       Z
     else
       S (i2n (i - 1));;

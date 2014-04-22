@@ -1,4 +1,4 @@
-#use "q5.ml";;
+#use "q2_5.ml";;
 
 exception Eval_error of string;;
   
@@ -35,33 +35,3 @@ let rec eval e =
      (match (eval e1) with
       | VBool v1  -> if v1 then (eval e2) else (eval e3)
       | _ -> raise (Eval_error "if: arguments must be (bool, value, value)"));;
-
-(* 
-if (3 + 6) = 9 then 
-  24 / (if 5 < 0 then 
-	  8 
-	else 
-	  6) 
-else 
-  3 * 4;;
-*)
-
-let f = EIf (
-	    EEq (
-		EAdd (
-		    EConst (VInt 3),
-		    EConst (VInt 6)),
-		EConst (VInt 9)),
-	    EDiv (
-		EConst (VInt 24),
-		EIf (
-		    ELt (
-			EConst (VInt 5),
-			EConst (VInt 0)),
-		    EConst (VInt 8),
-		    EConst (VInt 6))),
-	    EMul (
-		EConst (VInt 3),
-		EConst (VInt 4)))
-    in
-    eval f;;
