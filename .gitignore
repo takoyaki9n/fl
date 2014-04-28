@@ -1,6 +1,8 @@
 *~
 *.cmo
 *.cmi
+*.o
+*.cmx
 *._bcdi
 *._d
 *.tar.gz
