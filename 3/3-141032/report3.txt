@@ -1,0 +1,65 @@
+関数・論理型プログラミング演習第3回レポート
+氏名:八尋渉
+学籍番号:05-141032
+
+問1
+ソースコード: なし
+実行例:考察を参照
+考察:
+-コンパイル
+$ ocamlc -c strSet.mli
+$ ocamlc -c strSet.ml
+$ ocamlc -c sort.ml
+$ ocamlc -o sort strSet.cmo sort.cmo 
+$ ./sort <<END
+> orange
+> banana
+> apple
+> peach
+> END
+apple
+banana
+orange
+peach
+strSet.mliをコンパイルせずにstrSet.mlをコンパイルすると、
+$ ocamlc -c strSet.ml
+File "strSet.ml", line 1, characters 0-1:
+Error: Could not find the .cmi file for interface strSet.mli.
+というエラーが出た。リンクの時に順番を変えると、
+$ ocamlc -o sort sort.cmo strSet.cmo
+File "_none_", line 1, characters 0-1:
+Error: Error while linking sort.cmo:
+Reference to undefined global `StrSet'
+というエラーが出た。
+-.cmoを使う
+使ってみた
+# #load "strSet.cmo";;
+# StrSet.empty;;
+- : StrSet.t = <abstr>
+-OCamlMakeFileを使う
+使ってみた。
+
+問2
+ソースコード: q3_2.ml
+実行例: test_q3_2.mlを参照
+考察:
+
+問3
+ソースコード: q3_3.ml
+実行例: test_q3_3.mlを参照
+考察:
+
+問4
+ソースコード: q3_4.ml
+実行例: test_q3_4.mlを参照
+考察:
+
+問5
+ソースコード: q3_5.ml
+実行例: test_q3_5.mlを参照
+考察:
+
+発展1
+ソースコード: e3_1.ml
+実行例: test_e3_1.mlを参照
+考察:
