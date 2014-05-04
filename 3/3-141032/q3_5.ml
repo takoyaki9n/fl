@@ -1,4 +1,4 @@
-module type RING =
+module type RIG =
   sig 
     type t
     val zero : t
@@ -8,7 +8,7 @@ module type RING =
   end
 
 module type MATRIX = 
-  functor (R: RING) ->
+  functor (R: RIG) ->
 	  sig
 	    type elm = R.t
 	    type mat
@@ -24,7 +24,7 @@ module type MATRIX =
 	  end
 
 module Matrix: MATRIX =
-  functor (R: RING) ->
+  functor (R: RIG) ->
 	  struct
 	    type elm = R.t
 	    type mat = R.t list list
@@ -93,7 +93,7 @@ module Matrix: MATRIX =
 	  end
 
 module type VECTOR = 
-  functor (R: RING) ->
+  functor (R: RIG) ->
 	  sig
 	    type elm = R.t
 	    type vec
@@ -106,7 +106,7 @@ module type VECTOR =
 	  end
 	    
 module Vector: VECTOR = 
-  functor (R: RING) ->
+  functor (R: RIG) ->
 	  struct
 	    module M = Matrix(R)
 	    type elm = R.t

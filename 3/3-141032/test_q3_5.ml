@@ -1,6 +1,6 @@
 #use "q3_5.ml";;
 
-module IntRing =
+module IntRig =
   struct
     type t = int
     let zero = 0
@@ -9,7 +9,7 @@ module IntRing =
     let mul a b = a * b
   end
 
-module BoolRing =
+module BoolRig =
   struct
     type t = bool
     let zero = false
@@ -18,8 +18,8 @@ module BoolRing =
     let mul a b = a && b
   end
 
-module IntMatrix = Matrix(IntRing);;
-module IntVector = Vector(IntRing);;
+module IntMatrix = Matrix(IntRig);;
+module IntVector = Vector(IntRig);;
 
 let a = IntMatrix.list2mat [[1; 2]; [3; 4]; [5; 6]];;
 let b = IntMatrix.list2mat [[1; 3; 5]; [2; 4; 6]];;
