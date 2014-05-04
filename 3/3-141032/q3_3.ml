@@ -1,11 +1,5 @@
-type order = LT | EQ | GT;;
+#use "orderd_type.ml";;
 
-module type ORDERED_TYPE = 
-  sig 
-    type t
-    val compare : t -> t -> order 
-  end
-    
 module OrderSet (T : ORDERED_TYPE) : 
 sig
   type t
@@ -18,7 +12,7 @@ sig
   val load : T.t list -> t -> t
 end = 
   struct
-    type t = Leaf | Node of T.t * t * t
+    type t = Leaf | Node of T.t * t * t					
 					
     let empty = Leaf
 		  
@@ -39,7 +33,7 @@ end =
 	 let (u, t) = remove_min tl
 	 in
 	 (u, Node (v, t, tr))
-	   
+
     let rec remove v tree =
       match tree with
       | Leaf -> Leaf
@@ -53,7 +47,6 @@ end =
 	       | (Some w, t) -> Node (w, tl, t))
 	 | LT -> Node (u, remove v tl, tr)
 	 | GT -> Node (u, tl, remove v tr)
-		      
     let rec mem v tree =
       match tree with
       | Leaf -> false
