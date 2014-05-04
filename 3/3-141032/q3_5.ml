@@ -77,13 +77,13 @@ module Matrix: MATRIX =
 	    let mul a b =
 	      try 
 		List.map 
-		  (fun u -> 
+		  (fun v -> 
 		   List.map 
-		     (fun v -> 
+		     (fun u -> 
 		      let z = R.mul (List.hd v) (List.hd u) in
 		      List.fold_left2 
 			(fun z x y ->
-			 R.add z (R.mul x y)) z (List.tl v) (List.tl u)) a) (trans b)
+			 R.add z (R.mul x y)) z (List.tl v) (List.tl u)) (trans b)) a
 	      with
 	      | Invalid_argument m -> failwith "unmatch size"				       
 
