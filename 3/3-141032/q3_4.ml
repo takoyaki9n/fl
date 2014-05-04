@@ -5,7 +5,6 @@ sig
   type 'a t
   val empty : 'a t
   val add : K.t -> 'a -> 'a t -> 'a t
-  val remove_min : 'a t -> K.t option * 'a option * 'a t
   val remove : K.t -> 'a t -> 'a t
   val lookup : K.t -> 'a t -> 'a option
   val size : 'a t -> int
