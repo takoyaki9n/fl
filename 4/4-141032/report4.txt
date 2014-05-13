@@ -1,0 +1,23 @@
+関数・論理型プログラミング演習第4回レポート
+氏名:八尋渉
+学籍番号:05-141032
+
+q2-4以下のファイルを読みました。
+
+問1
+ソースコード: なし
+実行例:考察を参照
+考察:
+-コンパイル
+$ ocamllex exampleLexer.mll
+$ ocamlyacc exampleParser.mly
+$ ocamlc -c syntax.ml
+$ ocamlc -c exampleParser.mli
+$ ocamlc -c exampleParser.ml
+$ ocamlc -c exampleLexer.ml
+$ ocamlc -c example.ml
+$ ocamlc -o example syntax.cmo exampleParser.cmo exampleLexer.cmo example.cmo
+$ ./example <<EOF
+3 + 5
+EOF
+EAdd (3,5)
