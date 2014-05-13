@@ -28,5 +28,3 @@ let rec string_of_expr = function
     
 let print_expr expr = print_string (string_of_expr expr);;
 
-
- ../../Week4/example/Makefile  ../../Week4/example/OCamlMakefile  ../../Week4/example/example.ml  ../../Week4/example/exampleLexer.mll  ../../Week4/example/exampleParser.mly  ../../Week4/example/syntax.ml

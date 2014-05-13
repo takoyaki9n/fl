@@ -1,4 +1,5 @@
 SOURCES = syntax.ml exampleLexer.mll exampleParser.mly example.ml
+TRASH = *~ *.output
 RESULT  = example
 
 YFLAGS = -v 
