@@ -122,3 +122,11 @@ let print_expr expr =
 
 let print_command command = 
   fprintf std_formatter "%a@." pp_command command
+
+let print_value = function 
+  | VInt i -> fprintf std_formatter "- : int = %d@." i
+  | VBool b -> fprintf std_formatter "- : bool = %B@." b
+
+let print_variable n = function 
+  | VInt i -> fprintf std_formatter "val %s : int = %d@." n i
+  | VBool b -> fprintf std_formatter "val %s : bool = %B@." n b
