@@ -11,6 +11,7 @@ let rec eval_expr env = function
 	 List.assoc v env
        with
        |Not_found -> raise (Eval_error "unbound variable"))
+  | EFun (x, e) -> VFun (x, e, env)
   | EAdd (e1, e2) -> 
      (match (eval_expr env e1), (eval_expr env e2) with
       | VInt v1, VInt v2 -> VInt (v1 + v2)
@@ -45,5 +46,12 @@ let rec eval_expr env = function
      let v1 = eval_expr env e1 in
      let env = (k, v1)::env in
      eval_expr env e2
+  | EApp (e1, e2) ->
+     (match (eval_expr env e1) with
+      | VFun (Name k, b, e) ->  
+	 let v = eval_expr env e2 in
+	 let e = (k, v)::e in
+	 eval_expr e b
+      | _ -> raise (Eval_error "app: applying to not a function"))
   | _ -> raise (Eval_error "eval failed");;
 

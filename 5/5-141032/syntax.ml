@@ -5,6 +5,7 @@ type name = Name of string
 type value =
   | VInt  of int
   | VBool of bool 
+  | VFun of name * expr * env
   (* 拡張の必要あり *) 
 
 and  pat =
@@ -30,6 +31,8 @@ and  expr =
   | EApp   of expr * expr 
   | ECons  of expr * expr 
   | ENil   
+  
+and env = (string * value) list
 
 type command =
   | CLet   of name * expr 
@@ -89,7 +92,7 @@ let rec pp_expr fmt = function
     fprintf fmt "ELet (@[<hov 2>%a,@ %a,@ %a@])"
       pp_name n pp_expr e1 pp_expr e2
   | ERLets (ds,e) -> 
-    pp_bin fmt "ELets" (pp_list pp_letrec) ds pp_expr e 
+    pp_bin fmt "ERLets" (pp_list pp_letrec) ds pp_expr e 
   | EMatch (e,alts) -> 
     pp_bin fmt "EMatch" pp_expr e (pp_list pp_alt) alts 
   | EFun (n,e) -> 
@@ -126,7 +129,9 @@ let print_command command =
 let print_value = function 
   | VInt i -> fprintf std_formatter "- : int = %d@." i
   | VBool b -> fprintf std_formatter "- : bool = %B@." b
+  | VFun _ -> fprintf std_formatter "- : <fun>@."
 
 let print_variable n = function 
   | VInt i -> fprintf std_formatter "val %s : int = %d@." n i
   | VBool b -> fprintf std_formatter "val %s : bool = %B@." n b
+  | VFun _ -> fprintf std_formatter "val %s : <fun>@." n
