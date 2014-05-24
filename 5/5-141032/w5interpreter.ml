@@ -4,13 +4,14 @@ exception Eval_error of string;;
   
 let empty_env = [];;
 
-let rec eval_expr env = function
+let rec eval_expr env expr=
+  match expr with
   | EConst v -> v
   | EVar (Name v) -> 
      (try
 	 List.assoc v env
        with
-       |Not_found -> raise (Eval_error "unbound variable"))
+       |Not_found -> raise (Eval_error ("unbound variable " ^ v)))
   | EFun (x, e) -> VFun (x, e, env)
   | EAdd (e1, e2) -> 
      (match (eval_expr env e1), (eval_expr env e2) with
@@ -46,12 +47,20 @@ let rec eval_expr env = function
      let v1 = eval_expr env e1 in
      let env = (k, v1)::env in
      eval_expr env e2
+  | ERLets (lets, e) ->
+     let envr = ref env in
+     envr := List.fold_right (fun (Name n1, n2, ex) ev -> (n1, VRFun (n2, ex, envr))::ev) lets env ;
+     eval_expr !envr e
   | EApp (e1, e2) ->
      (match (eval_expr env e1) with
       | VFun (Name k, b, e) ->  
 	 let v = eval_expr env e2 in
 	 let e = (k, v)::e in
 	 eval_expr e b
+      | VRFun (Name k, b, er) ->  
+	 let v = eval_expr env e2 in
+	 let e = (k, v)::!er in
+	 eval_expr e b
       | _ -> raise (Eval_error "app: applying to not a function"))
-  | _ -> raise (Eval_error "eval failed");;
+  | _ -> raise (Eval_error "unsupported expression");;
 

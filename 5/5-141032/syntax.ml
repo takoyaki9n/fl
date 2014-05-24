@@ -6,6 +6,7 @@ type value =
   | VInt  of int
   | VBool of bool 
   | VFun of name * expr * env
+  | VRFun of name * expr * (env ref)
   (* 拡張の必要あり *) 
 
 and  pat =

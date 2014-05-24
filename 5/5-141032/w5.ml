@@ -20,7 +20,8 @@ let read_and_print env f =
   | Parsing.Parse_error -> 
      print_endline "ParseError!"; f env
   | W5interpreter.Eval_error m ->
-     print_endline "EvalError!"; f env
+     print_endline "EvalError! ";
+     print_endline m; f env
   | Failure e -> 
      print_endline ("Failure: " ^ e); f env
 					
@@ -36,6 +37,8 @@ let read_print_from_channel input =
   with 
   | Parsing.Parse_error -> 
      print_endline "Parse Error!"
+  | W5interpreter.Eval_error m ->
+     print_endline "EvalError! "; print_endline m
 
 let main () =
   if Array.length Sys.argv > 1 then 
