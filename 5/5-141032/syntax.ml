@@ -47,6 +47,8 @@ let pp_name fmt = function
 let pp_value fmt = function 
   | VInt  i -> fprintf fmt "%d" i 
   | VBool b -> fprintf fmt "%B" b
+  | VFun _ -> fprintf fmt "<fun>"
+  | VRFun _ -> fprintf fmt "<fun>"
 
 let pp_list pp fmt xs = 
   let rec pp_list' fmt = function
@@ -131,8 +133,10 @@ let print_value = function
   | VInt i -> fprintf std_formatter "- : int = %d@." i
   | VBool b -> fprintf std_formatter "- : bool = %B@." b
   | VFun _ -> fprintf std_formatter "- : <fun>@."
+  | VRFun _ -> fprintf std_formatter "- : <fun>@."
 
 let print_variable n = function 
   | VInt i -> fprintf std_formatter "val %s : int = %d@." n i
   | VBool b -> fprintf std_formatter "val %s : bool = %B@." n b
   | VFun _ -> fprintf std_formatter "val %s : <fun>@." n
+  | VRFun _ -> fprintf std_formatter "val %s : <fun>@." n
