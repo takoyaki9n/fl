@@ -7,7 +7,6 @@ type value =
   | VBool of bool 
   | VFun of name * expr * env
   | VRFun of name * expr * (env ref)
-  (* 拡張の必要あり *) 
 
 and  pat =
   | PConst of value 
@@ -32,8 +31,8 @@ and  expr =
   | EApp   of expr * expr 
   | ECons  of expr * expr 
   | ENil   
-  
-and env = (string * value) list
+
+and env = (name * value) list
 
 type command =
   | CLet   of name * expr 

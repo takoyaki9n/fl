@@ -12,13 +12,13 @@ let read_and_print env f =
     (match result with 
      | CLet (Name n, e) ->
      	let v  = (eval_expr env e) in
-     	print_variable n v; f ((n, v)::env)
+     	print_variable n v; f ((Name n, v)::env)
      | CRLets lets ->
      	let envr = ref env in
 	envr := List.fold_right (fun (Name n1, n2, ex) ev -> 
 				 let v = VRFun (n2, ex, envr) in
 				 print_variable n1 v;
-				 (n1, v)::ev) lets env ;
+				 (Name n1, v)::ev) lets env ;
      	f !envr
      | CExp e -> print_value (eval_expr env e); f env
      | CQuit -> print_string "Bye\n"
