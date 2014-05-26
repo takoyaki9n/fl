@@ -8,7 +8,7 @@ let read_and_print env f =
     print_string "> "; flush stdout; 
     let lexbuf = Lexing.from_channel stdin in 
     let result = W5parser.command W5lexer.token lexbuf in 
-    print_command result;
+    (* print_command result; *)
     (match result with 
      | CLet (n, e) ->
      	let v  = (eval_expr env e) in
@@ -39,7 +39,7 @@ let read_print_from_channel input =
   try 
     let lexbuf = Lexing.from_channel input in 
     let result = W5parser.main_expr W5lexer.token lexbuf in
-    print_expr result;
+    (* print_expr result; *)
     print_result None (eval_expr W5interpreter.empty_env result); 
   with 
   | Parsing.Parse_error -> 
