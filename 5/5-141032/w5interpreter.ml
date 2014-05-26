@@ -16,6 +16,12 @@ let rec matching v p =
      (match (matching x p1), (matching (VList xs) p2) with 
       | Some bnd1, Some bnd2 -> Some (bnd1 @ bnd2)
       | _, _ -> None)
+  | VTup [], PTup [] ->
+     Some empty_env
+  | VTup (x::xs), PTup (y::ys) ->
+     (match (matching x y), (matching (VTup xs) (PTup ys)) with 
+      | Some bnd1, Some bnd2 -> Some (bnd1 @ bnd2)
+      | _, _ -> None)
   | _ -> None;;
   
 let rec find_match v = function
@@ -38,6 +44,7 @@ let rec eval_expr env = function
      (match (eval_expr env e1), (eval_expr env e2) with
       | v, VList l -> VList (v::l)
       | _ -> raise (Eval_error "cons: arguments must be (_, list)"))
+  | ETup l -> VTup (List.map (eval_expr env) l)
   | EAdd (e1, e2) -> 
      (match (eval_expr env e1), (eval_expr env e2) with
       | VInt v1, VInt v2 -> VInt (v1 + v2)

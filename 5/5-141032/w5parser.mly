@@ -42,9 +42,15 @@ command:
 
 pat:
 | simple_pat CONS pat { PCons ($1,$3) }
+| LPAR tup_pat_inner RPAR { PTup($2) }
 | simple_pat          { $1 } 
 ;
 
+tup_pat_inner:
+| pat COMMA tup_pat_inner { $1::$3 }
+| pat                 { [$1] }
+;
+  
 simple_pat:
 | var           { PVar $1 }
 | INT           { PConst (VInt $1) }
@@ -157,7 +163,6 @@ app_expr:
 | simple_expr          { $1 }
 ;
                         
-
 simple_expr:
 | INT               { EConst (VInt $1) }
 | ID                { EVar   (Name $1) }
@@ -165,6 +170,7 @@ simple_expr:
 | FALSE             { myfalse } 
 | LPAR expr RPAR    { $2 }
 | list_expr         { $1 }
+| tup_expr          { $1 }
 | nil               { ENil }
 ;
 
@@ -175,6 +181,15 @@ list_expr:
 list_inner:
 | expr SEMICOLON list_inner { ECons($1, $3) }
 | expr                      { ECons($1, ENil) }
+;
+
+tup_expr:
+| LPAR tup_inner RPAR { ETup($2) }
+;
+
+tup_inner:
+| expr COMMA tup_inner { $1::$3 }
+| expr                 { [$1] }
 ;
 
 nil: 
