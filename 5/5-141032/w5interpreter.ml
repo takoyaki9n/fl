@@ -4,12 +4,19 @@ exception Eval_error of string;;
   
 let empty_env: env = [];;
 
-let rec matching v = function
-  | PConst u ->
-     if u = v then Some empty_env else None
-  | PVar n ->
+let rec matching v p =
+  match v, p with
+  | _, PConst c ->
+     if v = c then Some empty_env else None
+  | _, PVar n ->
      Some [(n, v)]
-  | _ -> raise (Eval_error "invalid pattern");;
+  | VList [], PNil -> 
+     Some empty_env
+  | VList (x::xs), PCons (p1, p2) ->
+     (match (matching x p1), (matching (VList xs) p2) with 
+      | Some bnd1, Some bnd2 -> Some (bnd1 @ bnd2)
+      | _, _ -> None)
+  | _ -> None;;
   
 let rec find_match v = function
   | [] -> raise (Eval_error "match failure")
@@ -17,7 +24,7 @@ let rec find_match v = function
      (match (matching v pat) with
       | None -> find_match v cases
       | Some bnd -> (bnd, ex));;
-       
+  
 let rec eval_expr env = function
   | EConst v -> v
   | EVar (Name v) -> 

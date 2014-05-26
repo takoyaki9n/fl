@@ -19,11 +19,11 @@
 %token TRUE FALSE 
 %token PLUS MINUS 
 %token TIMES DIV 
-%token CONS LBRACKET RBRACKET
+%token CONS LBRACKET RBRACKET SEMICOLON
 %token OR
 %token AND 
 %token LT LE GT GE 
-%token LPAR RPAR 
+%token LPAR RPAR COMMA
 %token EOC
 %token EOF 
 
@@ -164,7 +164,17 @@ simple_expr:
 | TRUE              { mytrue }
 | FALSE             { myfalse } 
 | LPAR expr RPAR    { $2 }
+| list_expr         { $1 }
 | nil               { ENil }
+;
+
+list_expr:
+| LBRACKET list_inner RBRACKET { $2 }
+;
+
+list_inner:
+| expr SEMICOLON list_inner { ECons($1, $3) }
+| expr                      { ECons($1, ENil) }
 ;
 
 nil: 
