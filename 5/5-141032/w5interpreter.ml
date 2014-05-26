@@ -26,6 +26,11 @@ let rec eval_expr env = function
        with
        |Not_found -> raise (Eval_error ("unbound variable " ^ v)))
   | EFun (x, e) -> VFun (x, e, env)
+  | ENil -> VList []
+  | ECons (e1, e2) -> 
+     (match (eval_expr env e1), (eval_expr env e2) with
+      | v, VList l -> VList (v::l)
+      | _ -> raise (Eval_error "cons: arguments must be (_, list)"))
   | EAdd (e1, e2) -> 
      (match (eval_expr env e1), (eval_expr env e2) with
       | VInt v1, VInt v2 -> VInt (v1 + v2)

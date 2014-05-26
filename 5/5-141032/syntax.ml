@@ -7,6 +7,7 @@ type value =
   | VBool of bool 
   | VFun of name * expr * env
   | VRFun of name * expr * (env ref)
+  | VList of value list
 
 and  pat =
   | PConst of value 
@@ -43,11 +44,19 @@ type command =
 let pp_name fmt = function 
   | Name n -> fprintf fmt "%s" n
 
-let pp_value fmt = function 
+let rec pp_value fmt = function 
   | VInt  i -> fprintf fmt "%d" i 
   | VBool b -> fprintf fmt "%B" b
   | VFun _ -> fprintf fmt "<fun>"
   | VRFun _ -> fprintf fmt "<fun>"
+  | VList l -> pp_vlist fmt l
+
+and pp_vlist fmt xs = 
+  let rec pp_vlist' fmt = function
+    | []    -> fprintf fmt "" 
+    | [x]   -> fprintf fmt "%a" pp_value x 
+    | x::xs -> fprintf fmt "%a;@ %a" pp_value x pp_vlist' xs in
+  fprintf fmt "[@[<hov 2>%a@]]" pp_vlist' xs
 
 let pp_list pp fmt xs = 
   let rec pp_list' fmt = function
@@ -55,20 +64,19 @@ let pp_list pp fmt xs =
     | [x]   -> fprintf fmt "%a" pp x 
     | x::xs -> fprintf fmt "%a,@ %a" pp x pp_list' xs in
   fprintf fmt "[@[<hov 2>%a@]]" pp_list' xs
-    
 
 let pp_bin fmt s f1 e1 f2 e2 =
   fprintf fmt "%s (@[<hov 2>%a,@ %a@])" s f1 e1 f2 e2 
 
 let rec pp_pat fmt = function 
   | PConst v -> 
-    pp_value fmt v 
+     pp_value fmt v 
   | PVar x -> 
-    pp_name fmt x
+     pp_name fmt x
   | PCons (p1,p2) ->
-    pp_bin fmt "PCons" pp_pat p1 pp_pat p2 
+     pp_bin fmt "PCons" pp_pat p1 pp_pat p2 
   | PNil -> 
-    fprintf fmt "PNil" 
+     fprintf fmt "PNil" 
 
 let rec pp_expr fmt = function 
   | EConst v -> 
@@ -128,14 +136,13 @@ let print_expr expr =
 let print_command command = 
   fprintf std_formatter "%a@." pp_command command
 
-let print_value = function 
-  | VInt i -> fprintf std_formatter "- : int = %d@." i
-  | VBool b -> fprintf std_formatter "- : bool = %B@." b
-  | VFun _ -> fprintf std_formatter "- : <fun>@."
-  | VRFun _ -> fprintf std_formatter "- : <fun>@."
-
-let print_variable n = function 
-  | VInt i -> fprintf std_formatter "val %s : int = %d@." n i
-  | VBool b -> fprintf std_formatter "val %s : bool = %B@." n b
-  | VFun _ -> fprintf std_formatter "val %s : <fun>@." n
-  | VRFun _ -> fprintf std_formatter "val %s : <fun>@." n
+let print_result n v=
+  let t = (match v with
+	   | VInt i -> "int"
+	   | VBool b -> "bool"
+	   | VFun _ | VRFun _ -> "'a -> 'b"
+	   | VList l -> "'a list") in
+  match n with
+  | None -> fprintf std_formatter "- : %s = %a@." t pp_value v
+  | Some m -> fprintf std_formatter "val %a : %s = %a@." pp_name m t pp_value v;;
+  

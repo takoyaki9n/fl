@@ -10,17 +10,17 @@ let read_and_print env f =
     let result = W5parser.command W5lexer.token lexbuf in 
     print_command result;
     (match result with 
-     | CLet (Name n, e) ->
+     | CLet (n, e) ->
      	let v  = (eval_expr env e) in
-     	print_variable n v; f ((Name n, v)::env)
+     	print_result (Some n) v; f ((n, v)::env)
      | CRLets lets ->
      	let envr = ref env in
-	envr := List.fold_right (fun (Name n1, n2, ex) ev -> 
+	envr := List.fold_right (fun (n1, n2, ex) ev -> 
 				 let v = VRFun (n2, ex, envr) in
-				 print_variable n1 v;
-				 (Name n1, v)::ev) lets env ;
+				 print_result (Some n1) v;
+				 (n1, v)::ev) lets env ;
      	f !envr
-     | CExp e -> print_value (eval_expr env e); f env
+     | CExp e -> print_result None (eval_expr env e); f env
      | CQuit -> print_string "Bye\n"
      | _     -> f env)
   with 
@@ -40,7 +40,7 @@ let read_print_from_channel input =
     let lexbuf = Lexing.from_channel input in 
     let result = W5parser.main_expr W5lexer.token lexbuf in
     print_expr result;
-    print_value (eval_expr W5interpreter.empty_env result); 
+    print_result None (eval_expr W5interpreter.empty_env result); 
   with 
   | Parsing.Parse_error -> 
      print_endline "Parse Error!"
