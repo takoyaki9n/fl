@@ -45,13 +45,14 @@ rule token = parse
 | "&&"        { AND } (* Extension, see README. *) 
 
 | "::"        { CONS }
-
 | ";;"        { EOC } 
 
 | '('         { LPAR }
+| ','         { COMMA }
 | ')'         { RPAR }
 
 | '['         { LBRACKET }
+| ';'         { SEMICOLON }
 | ']'         { RBRACKET }
 
 | digit+ as n { INT (int_of_string n) }
