@@ -1,8 +1,6 @@
 open Syntax
 
 exception Eval_error of string;;
-  
-let empty_env: env = [];;
 
 let rec matching v p =
   match v, p with

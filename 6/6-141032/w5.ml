@@ -41,7 +41,7 @@ let read_print_from_channel input =
     let lexbuf = Lexing.from_channel input in 
     let result = W5parser.main_expr W5lexer.token lexbuf in
     (* print_expr result; *)
-    print_result None (eval_expr W5interpreter.empty_env result); 
+    print_result None (eval_expr Syntax.empty_env result); 
   with 
   | Parsing.Parse_error -> 
      print_endline "Parse Error!"
@@ -56,7 +56,7 @@ let main () =
       let input  = open_in (Sys.argv.(1)) in 
       read_print_from_channel input; close_in input
   else 
-    read_print_loop W5interpreter.empty_env
+    read_print_loop Syntax.empty_env
 
 ;;
 if !Sys.interactive then 

@@ -2,19 +2,17 @@ type name = Name of string
 
 type value =
   | VInt  of int
-  | VBool of bool 
+  | VBool of bool
   | VFun  of name * expr * env
   | VRFun of name * expr * (env ref)
   | VList of value list
   | VTup  of value list
-
 and pat =
   | PConst of value 
   | PVar   of name
   | PCons  of pat * pat 
   | PNil 
   | PTup  of pat list
-
 and expr =
   | EConst of value 
   | EVar   of name 
@@ -33,8 +31,9 @@ and expr =
   | ECons  of expr * expr 
   | ENil   
   | ETup   of expr list
-
 and env = (name * value) list
+  
+let empty_env: env = [];;
 
 type tvar = int
 
@@ -46,7 +45,11 @@ type ty =
   | TTup of ty list
   | TVar of tvar
 
+type ty_map = tvar * ty
+
 type ty_env = (ty * ty) list
+
+let empty_ty_env: ty_env = [];;
 
 type command =
   | CLet   of name * expr 
