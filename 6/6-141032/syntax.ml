@@ -9,15 +9,15 @@ type value =
   | VRFun of name * expr * (env ref)
   | VList of value list
   | VTup  of value list
- 
-and  pat =
+
+and pat =
   | PConst of value 
   | PVar   of name
   | PCons  of pat * pat 
   | PNil 
   | PTup  of pat list
 
-and  expr =
+and expr =
   | EConst of value 
   | EVar   of name 
   | EAdd   of expr * expr 
@@ -43,6 +43,16 @@ type command =
   | CRLets of (name * name * expr) list 
   | CExp of expr 
   | CQuit 
+
+type tvar = int
+
+type ty = 
+  | TInt
+  | TBool
+  | TFun of ty * ty
+  | TList of ty
+  | TTup of ty list
+  | TVar of tvar
 
 let pp_name fmt = function 
   | Name n -> fprintf fmt "%s" n

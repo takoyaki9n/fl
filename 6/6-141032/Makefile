@@ -7,7 +7,7 @@ OCAMLFLAGS = "-g"
 
 ## .output（menhirを使った場合は.automatonと.conflicts）
 ## を生成する場合は以下をアンコメント
-# YFLAGS = -v 
+ YFLAGS = -v 
 
 all: byte-code 
 
