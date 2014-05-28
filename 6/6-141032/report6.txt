@@ -1,0 +1,52 @@
+関数・論理型プログラミング演習第5回レポート
+氏名:八尋渉
+学籍番号:05-141032
+
+syntax.ml、w5.ml、w5lexer.mll、w5parser.mlyを流用した。
+ソースコード（全問共通): syntax.ml  w5.ml  w5interpreter.ml  w5lexer.mll  w5parser.mly
+
+問1 関数抽象・適用
+実行例:
+examples/fun*.ml
+考察:
+value型にVFunを追加し、eval_exprにEFunとEAppの評価ルールを追加した。
+VFunはクロージャとして実装し、定義は
+  VFun  of name * expr * env
+とした。
+
+問2, 5 (相互)再帰関数
+実行例:
+examples/rec_fun*.ml	 再帰
+examples/mut_rec_fun*.ml 相互再帰
+考察:
+パーサの仕様の関係で、再帰関数と相互再帰関数を同時に実装した。
+value型にVRFunを追加し、eval_exprにおいて、ERLetsの評価ルールを追加し、EAppの評価ルールに再帰関数のものを追加した。
+VRFunは循環クロージャとして実装し、定義は
+  VRFun of name * expr * (env ref)
+とした。
+まだ型推論を実装していないので、不動点コンビネータも定義できる。
+対話環境のCRLetsの評価ルールも追加した。
+
+問3 パターンパッチング(定数と変数)
+実行例:
+examples/examples/match_const_var*.ml
+考察:
+eval_exprにEMatchの評価ルールを追加した。
+パターンマッチングの処理はfind_matchとmatchingの２つの関数から成り、
+matchingはパターン一つと値を受け取り、失敗したらNoneを、成功したらマッチングの結果の束縛条件を返す。
+find_matchは、match式の各パターンを、マッチングするものが現れるまでmatchingで評価し、成功した時点で束縛条件と矢印の右側の式の組みを返す。
+
+問4 リストとタプル
+実行例:
+examples/examples/list_tup*.ml
+考察:
+w5lexer.mllに','と';'のトークンを追加し、
+w5parser.mlyにリストとタプルのための文法を追加した。
+リストの略記法[1;2;3]も使えるようにした。
+exprにもタプル用のETupを、value型にVListとVTupを追加した。パーサーでは、lispのconsと同じように末尾にNil以外の値が来るのも許しているが、ocamlではそれが禁止されているので、
+両方value listとして実装した。
+  VList of value list
+  VTup  of value list
+eval_exprにEConsとENil及びETupの評価ルールを追加した。
+パターンマッチングもリストとタプルに対応し、そのためにpatにPTupを追加した。
+
