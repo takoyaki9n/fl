@@ -1,4 +1,5 @@
 open Syntax
+open W5printer
 open W5parser
 open W5lexer
 open W5interpreter
