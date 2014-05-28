@@ -1,4 +1,4 @@
-SOURCES = syntax.ml w5printer.mll w5lexer.mll w5parser.mly w5interpreter.ml w5.ml
+SOURCES = syntax.ml w5printer.ml w5lexer.mll w5parser.mly w5interpreter.ml w5.ml
 RESULT = w5
 TRASH = *~
 OCAMLFLAGS = "-g"
