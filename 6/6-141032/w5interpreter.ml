@@ -9,13 +9,13 @@ let rec matching v p =
   | _, PVar n ->
      Some [(n, v)]
   | VList [], PNil -> 
-     Some empty_env
+     Some Syntax.empty_env
   | VList (x::xs), PCons (p1, p2) ->
      (match (matching x p1), (matching (VList xs) p2) with 
       | Some bnd1, Some bnd2 -> Some (bnd1 @ bnd2)
       | _, _ -> None)
   | VTup [], PTup [] ->
-     Some empty_env
+     Some Syntax.empty_env
   | VTup (x::xs), PTup (y::ys) ->
      (match (matching x y), (matching (VTup xs) (PTup ys)) with 
       | Some bnd1, Some bnd2 -> Some (bnd1 @ bnd2)
@@ -98,3 +98,56 @@ let rec eval_expr env = function
      eval_expr (bnd @ env) ex
   | _ -> raise (Eval_error "unsupported expression");;
   
+let rec ty_sbst maps ty = 
+  let rec ty_sbst_one mps v =
+    match mps with
+    | [] -> TVar v
+    | (u, t)::ms -> 
+       if v = u then t else ty_sbst_one ms v in
+  match ty with
+  | TInt | TBool -> ty
+  | TFun(t1, t2) -> TFun(ty_sbst maps t1, ty_sbst maps t2)
+  | TVar v -> ty_sbst_one maps v
+  | _ -> raise (Eval_error "unify faled") ;;
+
+let rec appears t u = 
+  if t = u then 
+    true
+  else 
+    match u with 
+    | TFun (u1, u2) -> (appears t u1) || (appears t u2)
+    | _ -> false;;
+
+let rec ty_replace s t u = 
+  if s = u then 
+    t
+  else 
+    match u with 
+    | TFun (u1, u2) -> TFun(ty_replace s t u1, ty_replace s t u2)
+    | _ -> u;;
+
+let rec ty_unify = function
+  | [] -> []
+  | (s, t)::conds -> 
+     if s = t then
+       ty_unify conds
+     else
+       match s, t with
+       | TFun(s1, s2), TFun(t1, t2) ->
+	  ty_unify ((s1, t1)::(s2, t2)::conds)
+       | TVar v, _ ->
+	  if (appears s t) then
+	    raise (Eval_error "unify failed")
+	  else
+	    let cnds = List.map (fun (u1, u2) -> (ty_replace s t u1, ty_replace s t u2)) conds in
+	    let maps = ty_unify cnds in
+	    (v, ty_sbst maps t)::maps
+       | _, TVar v ->
+	  if (appears t s) then
+	    raise (Eval_error "unify failed")
+	  else
+	    let cnds = List.map (fun (u1, u2) -> (ty_replace t s u1, ty_replace t s u2)) conds in
+	    let maps = ty_unify cnds in
+	    (v, ty_sbst maps s)::maps
+       | _, _ -> raise (Eval_error "unify failed")
+		  
