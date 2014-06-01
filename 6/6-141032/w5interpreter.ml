@@ -196,11 +196,18 @@ let rec gather_constraints tenv expr =
      let tenv = (n, t1)::tenv in
      let (t2, c2) = gather_constraints tenv e2 in
      (t2, c1@c2)
-  (* | ERLets (lets, e) -> *)
-  (*    let tenv = List.fold_right (fun (f, x, e) ev -> (f, TFun(TVar (new_tvar ()), TVar (new_tvar ())))) lets tenv in *)
-  (*    List.fold_right (fun (f, x e) ev -> ) *)
-		     
-  (*    gather_constraints ((x, a)::tenv) ev *)
+  | ERLets (lets, e) ->
+     let tenv = List.fold_right 
+		  (fun (f, x, e) ev -> 
+		   (f, TFun(TVar (new_tvar ()), TVar (new_tvar ())))::ev) 
+		  lets tenv in
+     let conds = List.fold_right 
+		   (fun (f, x, e) conds ->
+		    let TFun (a, b) = List.assoc f tenv in
+		    let (t, c) = gather_constraints ((x, a)::tenv) e in
+		    (t, b)::(c @ conds)) lets [] in
+     let (t, c) = gather_constraints tenv e in
+     (t, conds @ c)
   | EApp (e1, e2) ->
      let (t1, c1) = gather_constraints tenv e1 in
      let (t2, c2) = gather_constraints tenv e2 in

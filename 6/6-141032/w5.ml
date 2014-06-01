@@ -4,7 +4,7 @@ open W5parser
 open W5lexer
 open W5interpreter
 
-let read_and_print env f =
+let read_and_print env tenv f =
   try 
     print_string "> "; flush stdout; 
     let lexbuf = Lexing.from_channel stdin in 
@@ -12,29 +12,46 @@ let read_and_print env f =
     print_command result;
     (match result with 
      | CLet (n, e) ->
-     	let v  = (eval_expr env e) in
-     	print_result (Some n) v; f ((n, v)::env)
+	let t = infer_expr tenv e in
+     	let v = eval_expr env e in
+     	print_result (Some n) v t; f ((n, v)::env) ((n, t)::tenv)
      | CRLets lets ->
+	let tenv_tmp = List.fold_right 
+			 (fun (f, x, e) ev -> 
+			  (f, TFun(TVar (new_tvar ()), TVar (new_tvar ())))::ev) 
+			 lets tenv in
+	let conds = List.fold_right 
+		      (fun (f, x, e) conds ->
+		       let TFun (a, b) = List.assoc f tenv_tmp in
+		       let (t, c) = gather_constraints ((x, a)::tenv_tmp) e in
+		       (t, b)::(c @ conds)) lets [] in
+	let maps = ty_unify conds in
+	let tenv = List.fold_right 
+		     (fun (f, x, e) ev-> (f, ty_sbst maps (List.assoc f tenv_tmp))::ev) lets tenv in
      	let envr = ref env in
-	envr := List.fold_right (fun (n1, n2, ex) ev -> 
-				 let v = VRFun (n2, ex, envr) in
-				 print_result (Some n1) v;
-				 (n1, v)::ev) lets env ;
-     	f !envr
-     | CExp e -> print_result None (eval_expr env e); f env
+	envr := List.fold_right (fun (f, x, e) ev -> 
+				 let v = VRFun (x, e, envr) in
+				 let t = List.assoc f tenv in
+				 print_result (Some f) v t;
+				 (f, v)::ev) lets env;
+     	f !envr tenv
+     | CExp e -> 
+	let t = infer_expr tenv e in
+     	let v = eval_expr env e in
+	print_result None v t; f env tenv
      | CQuit -> print_string "Bye\n"
-     | _     -> f env)
+     | _     -> f env tenv)
   with 
   | Parsing.Parse_error -> 
-     print_endline "ParseError!"; f env
+     print_endline "ParseError!"; f env tenv
   | W5interpreter.Eval_error m ->
      print_endline "EvalError! ";
-     print_endline m; f env
+     print_endline m; f env tenv
   | Failure e -> 
-     print_endline ("Failure: " ^ e); f env
+     print_endline ("Failure: " ^ e); f env tenv
 					
-let rec read_print_loop env =
-  read_and_print env read_print_loop 
+let rec read_print_loop env tenv =
+  read_and_print env tenv read_print_loop 
 		 
 let read_print_from_channel input =
   try 
@@ -57,7 +74,7 @@ let main () =
       let input  = open_in (Sys.argv.(1)) in 
       read_print_from_channel input; close_in input
   else 
-    read_print_loop Syntax.empty_env
+    read_print_loop Syntax.empty_env Syntax.empty_ty_env
 
 ;;
 if !Sys.interactive then 
