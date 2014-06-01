@@ -26,6 +26,12 @@ and pp_vtup fmt xs =
     | x::xs -> fprintf fmt "%a,@ %a" pp_value x pp_vtup' xs in
   fprintf fmt "(@[<hov 2>%a@])" pp_vtup' xs
 
+let rec pp_type fmt = function
+  | TInt  -> fprintf fmt "int" 
+  | TBool  -> fprintf fmt "bool" 
+  | TVar v -> fprintf fmt "t%d" v
+  | TFun (t1, t2) -> fprintf fmt "(%a -> %a)" pp_type t1 pp_type t2;;
+
 let pp_list pp fmt xs = 
   let rec pp_list' fmt = function
     | []    -> fprintf fmt "" 
@@ -115,14 +121,8 @@ let print_expr expr =
 let print_command command = 
   fprintf std_formatter "%a@." pp_command command
 
-let print_result n v=
-  let t = (match v with
-	   | VInt i -> "int"
-	   | VBool b -> "bool"
-	   | VFun _ | VRFun _ -> "'a -> 'b"
-	   | VList l -> "'a list"
-	   | VTup l -> "'a * 'b") in
+let print_result n v t =
   match n with
-  | None -> fprintf std_formatter "- : %s = %a@." t pp_value v
-  | Some m -> fprintf std_formatter "val %a : %s = %a@." pp_name m t pp_value v;;
+  | None -> fprintf std_formatter "- : %a = %a@." pp_type t pp_value v
+  | Some m -> fprintf std_formatter "val %a : %a = %a@." pp_name m pp_type t pp_value v;;
   

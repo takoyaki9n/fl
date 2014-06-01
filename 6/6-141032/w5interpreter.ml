@@ -150,4 +150,69 @@ let rec ty_unify = function
 	    let maps = ty_unify cnds in
 	    (v, ty_sbst maps s)::maps
        | _, _ -> raise (Eval_error "unify failed")
-		  
+
+let tvar_val = ref 0;;
+
+let new_tvar () = tvar_val := !tvar_val + 1; !tvar_val - 1;;
+
+let rec gather_constraints tenv expr = 
+  match expr with
+  | EConst (VInt _) -> (TInt, [])
+  | EConst (VBool _) -> (TBool, [])
+  | EVar (Name v) -> 
+     (try
+	 (List.assoc (Name v) tenv, [])
+       with
+       |Not_found -> raise (Eval_error ("unbound variable " ^ v)))
+  | EFun (x, e) -> 
+     let a = TVar (new_tvar ()) in
+     let (t, c) = gather_constraints ((x, a)::tenv) e in
+     (TFun (a, t), c)
+  (* | ENil -> VList [] *)
+  (* | ECons (e1, e2) ->  *)
+  (*    (match (eval_expr env e1), (eval_expr env e2) with *)
+  (*     | v, VList l -> VList (v::l) *)
+  (*     | _ -> raise (Eval_error "cons: arguments must be (_, list)")) *)
+  (* | ETup l -> VTup (List.map (eval_expr env) l) *)
+  | EAdd (e1, e2) | ESub (e1, e2) | EMul (e1, e2) | EDiv (e1, e2) -> 
+     let (t1, c1) = gather_constraints tenv e1 in
+     let (t2, c2) = gather_constraints tenv e2 in
+     (TInt, (t1, TInt)::(t2, TInt)::(c1 @ c2))
+  | EEq (e1, e2) ->
+     let (t1, c1) = gather_constraints tenv e1 in
+     let (t2, c2) = gather_constraints tenv e2 in
+     (TBool, (t1, t2)::(c1 @ c2))
+  | ELT (e1, e2) -> 
+     let (t1, c1) = gather_constraints tenv e1 in
+     let (t2, c2) = gather_constraints tenv e2 in
+     (TBool, (t1, TInt)::(t2, TInt)::(c1 @ c2))
+  | EIf (e1, e2, e3) -> 
+     let (t1, c1) = gather_constraints tenv e1 in
+     let (t2, c2) = gather_constraints tenv e2 in
+     let (t3, c3) = gather_constraints tenv e3 in
+     (t2, (t1, TBool)::(t2, t3)::(c1 @ c2 @ c3))
+  | ELet (n, e1, e2) ->
+     let (t1, c1) = gather_constraints tenv e1 in
+     let tenv = (n, t1)::tenv in
+     let (t2, c2) = gather_constraints tenv e2 in
+     (t2, c1@c2)
+  (* | ERLets (lets, e) -> *)
+  (*    let tenv = List.fold_right (fun (f, x, e) ev -> (f, TFun(TVar (new_tvar ()), TVar (new_tvar ())))) lets tenv in *)
+  (*    List.fold_right (fun (f, x e) ev -> ) *)
+		     
+  (*    gather_constraints ((x, a)::tenv) ev *)
+  | EApp (e1, e2) ->
+     let (t1, c1) = gather_constraints tenv e1 in
+     let (t2, c2) = gather_constraints tenv e2 in
+     let a = TVar (new_tvar ()) in
+     (a, (t1, TFun(t2, a))::(c1 @ c2))
+  (* | EMatch (e, cases) -> *)
+  (*    let v = eval_expr env e in *)
+  (*    let (bnd, ex) = find_match v cases in *)
+  (*    eval_expr (bnd @ env) ex *)
+  | _ -> raise (Eval_error "unsupported expression");;
+
+let infer_expr tenv expr = 
+  let (t, conds) = gather_constraints tenv expr in
+  let maps =ty_unify conds in
+  ty_sbst maps t;;

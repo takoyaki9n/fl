@@ -41,13 +41,13 @@ type ty =
   | TInt
   | TBool
   | TFun of ty * ty
-  | TList of ty
-  | TTup of ty list
+  (* | TList of ty *)
+  (* | TTup of ty list *)
   | TVar of tvar
-
+	      
 type ty_map = tvar * ty
 
-type ty_env = (ty * ty) list
+type ty_env =  (name * ty) list
 
 let empty_ty_env: ty_env = [];;
 
