@@ -1,6 +1,7 @@
 open Syntax
 
 exception Eval_error of string;;
+exception Type_error of string;;
 
 let rec matching v p =
   match v, p with
@@ -108,7 +109,8 @@ let rec ty_sbst maps ty =
   | TInt | TBool -> ty
   | TFun(t1, t2) -> TFun(ty_sbst maps t1, ty_sbst maps t2)
   | TVar v -> ty_sbst_one maps v
-  | _ -> raise (Eval_error "unify faled") ;;
+  | TList t -> TList (ty_sbst maps t)
+  | _ -> raise (Type_error "unknown type") ;;
 
 let rec appears t u = 
   if t = u then 
@@ -116,6 +118,7 @@ let rec appears t u =
   else 
     match u with 
     | TFun (u1, u2) -> (appears t u1) || (appears t u2)
+    | TList t -> appears t u
     | _ -> false;;
 
 let rec ty_replace s t u = 
@@ -135,16 +138,18 @@ let rec ty_unify = function
        match s, t with
        | TFun(s1, s2), TFun(t1, t2) ->
 	  ty_unify ((s1, t1)::(s2, t2)::conds)
+       | TList t1, TList t2 ->
+	  ty_unify ((t1, t2)::conds)
        | TVar v, _ ->
 	  if (appears s t) then
-	    raise (Eval_error "unify failed")
+	    raise (Eval_error "recursive type")
 	  else
 	    let cnds = List.map (fun (u1, u2) -> (ty_replace s t u1, ty_replace s t u2)) conds in
 	    let maps = ty_unify cnds in
 	    (v, ty_sbst maps t)::maps
        | _, TVar v ->
 	  if (appears t s) then
-	    raise (Eval_error "unify failed")
+	    raise (Eval_error "recursive type")
 	  else
 	    let cnds = List.map (fun (u1, u2) -> (ty_replace t s u1, ty_replace t s u2)) conds in
 	    let maps = ty_unify cnds in
@@ -168,11 +173,11 @@ let rec gather_constraints tenv expr =
      let a = TVar (new_tvar ()) in
      let (t, c) = gather_constraints ((x, a)::tenv) e in
      (TFun (a, t), c)
-  (* | ENil -> VList [] *)
-  (* | ECons (e1, e2) ->  *)
-  (*    (match (eval_expr env e1), (eval_expr env e2) with *)
-  (*     | v, VList l -> VList (v::l) *)
-  (*     | _ -> raise (Eval_error "cons: arguments must be (_, list)")) *)
+  | ENil -> (TList (TVar (new_tvar ())), [])
+  | ECons (e1, e2) ->
+     let (t1, c1) = gather_constraints tenv e1 in
+     let (t2, c2) = gather_constraints tenv e2 in
+     (TList t1, (t2, TList t1)::(c1 @ c2))
   (* | ETup l -> VTup (List.map (eval_expr env) l) *)
   | EAdd (e1, e2) | ESub (e1, e2) | EMul (e1, e2) | EDiv (e1, e2) -> 
      let (t1, c1) = gather_constraints tenv e1 in

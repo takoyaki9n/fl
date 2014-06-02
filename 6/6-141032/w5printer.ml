@@ -30,7 +30,8 @@ let rec pp_type fmt = function
   | TInt  -> fprintf fmt "int" 
   | TBool  -> fprintf fmt "bool" 
   | TVar v -> fprintf fmt "t%d" v
-  | TFun (t1, t2) -> fprintf fmt "(%a -> %a)" pp_type t1 pp_type t2;;
+  | TFun (t1, t2) -> fprintf fmt "(%a -> %a)" pp_type t1 pp_type t2
+  | TList t -> fprintf fmt "%a list" pp_type t;;
 
 let pp_list pp fmt xs = 
   let rec pp_list' fmt = function
