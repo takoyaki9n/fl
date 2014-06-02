@@ -150,19 +150,19 @@ let rec ty_unify = function
 	  ty_unify (List.fold_right2 (fun t1 t2 cnds -> (t1, t2)::cnds) l1 l2 conds)
        | TVar v, _ ->
 	  if (appears s t) then
-	    raise (Eval_error "recursive type")
+	    raise (Type_error "recursive type")
 	  else
 	    let cnds = List.map (fun (u1, u2) -> (ty_replace s t u1, ty_replace s t u2)) conds in
 	    let maps = ty_unify cnds in
 	    (v, ty_sbst maps t)::maps
        | _, TVar v ->
 	  if (appears t s) then
-	    raise (Eval_error "recursive type")
+	    raise (Type_error "recursive type")
 	  else
 	    let cnds = List.map (fun (u1, u2) -> (ty_replace t s u1, ty_replace t s u2)) conds in
 	    let maps = ty_unify cnds in
 	    (v, ty_sbst maps s)::maps
-       | _, _ -> raise (Eval_error "unify failed")
+       | _, _ -> raise (Type_error "type unmatch")
 
 let tvar_val = ref 0;;
 
@@ -176,7 +176,7 @@ let rec gather_constraints tenv expr =
      (try
 	 (List.assoc (Name v) tenv, [])
        with
-       |Not_found -> raise (Eval_error ("unbound variable " ^ v)))
+       |Not_found -> raise (Type_error ("unbound variable " ^ v)))
   | EFun (x, e) -> 
      let a = TVar (new_tvar ()) in
      let (t, c) = gather_constraints ((x, a)::tenv) e in
@@ -240,7 +240,7 @@ let rec gather_constraints tenv expr =
 		    let (ti', ci')  = gather_constraints (ei @ tenv) ex in
 		    (t, ti)::(a, ti')::(ci @ ci' @ cnds)) cases [] in
      (a, conds)
-  | _ -> raise (Eval_error "unsupported expression")
+  | _ -> raise (Type_error "unsupported expression")
 
 and gather_constraints_pattern p = 
   match p with
@@ -263,7 +263,7 @@ and gather_constraints_pattern p =
 			 let (t, c, e) = gather_constraints_pattern p in 
 			 (t::ts, c @ cs, e @ es)) ps ([], [], []) in
      (TTup ts, c, e)
-  | _ -> raise (Eval_error "match failure")
+  | _ -> raise (Type_error "match failure")
 
 let infer_expr tenv expr = 
   let (t, conds) = gather_constraints tenv expr in
