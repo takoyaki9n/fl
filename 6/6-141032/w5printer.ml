@@ -31,7 +31,15 @@ let rec pp_type fmt = function
   | TBool  -> fprintf fmt "bool" 
   | TVar v -> fprintf fmt "t%d" v
   | TFun (t1, t2) -> fprintf fmt "(%a -> %a)" pp_type t1 pp_type t2
-  | TList t -> fprintf fmt "%a list" pp_type t;;
+  | TTup l -> pp_ttup fmt l
+  | TList t -> fprintf fmt "%a list" pp_type t
+
+and pp_ttup fmt xs = 
+  let rec pp_ttup' fmt = function
+    | []    -> fprintf fmt "" 
+    | [x]   -> fprintf fmt "%a" pp_type x 
+    | x::xs -> fprintf fmt "%a * %a" pp_type x pp_ttup' xs in
+  fprintf fmt "(@[<hov 2>%a@])" pp_ttup' xs
 
 let pp_list pp fmt xs = 
   let rec pp_list' fmt = function

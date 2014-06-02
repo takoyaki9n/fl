@@ -110,6 +110,7 @@ let rec ty_sbst maps ty =
   | TFun(t1, t2) -> TFun(ty_sbst maps t1, ty_sbst maps t2)
   | TVar v -> ty_sbst_one maps v
   | TList t -> TList (ty_sbst maps t)
+  | TTup l -> TTup (List.map (fun t -> ty_sbst maps t) l)
   | _ -> raise (Type_error "unknown type") ;;
 
 let rec appears t u = 
@@ -140,6 +141,8 @@ let rec ty_unify = function
 	  ty_unify ((s1, t1)::(s2, t2)::conds)
        | TList t1, TList t2 ->
 	  ty_unify ((t1, t2)::conds)
+       | TTup l1, TTup l2 ->
+	  ty_unify (List.fold_right2 (fun t1 t2 cnds -> (t1, t2)::cnds) l1 l2 conds)
        | TVar v, _ ->
 	  if (appears s t) then
 	    raise (Eval_error "recursive type")
@@ -178,7 +181,12 @@ let rec gather_constraints tenv expr =
      let (t1, c1) = gather_constraints tenv e1 in
      let (t2, c2) = gather_constraints tenv e2 in
      (TList t1, (t2, TList t1)::(c1 @ c2))
-  (* | ETup l -> VTup (List.map (eval_expr env) l) *)
+  | ETup l -> 
+     let (ts, c) = List.fold_right 
+		     (fun e (ts, cs) ->
+		      let (t, c) = gather_constraints tenv e in 
+		     (t::ts, c @ cs)) l ([], [])in
+     (TTup ts, c)
   | EAdd (e1, e2) | ESub (e1, e2) | EMul (e1, e2) | EDiv (e1, e2) -> 
      let (t1, c1) = gather_constraints tenv e1 in
      let (t2, c2) = gather_constraints tenv e2 in
