@@ -1,4 +1,6 @@
 open Syntax
+open Format 
+open W5printer
 
 exception Eval_error of string;;
 exception Type_error of string;;
@@ -119,7 +121,8 @@ let rec appears t u =
   else 
     match u with 
     | TFun (u1, u2) -> (appears t u1) || (appears t u2)
-    | TList t -> appears t u
+    | TList u -> appears t u
+    | TTup l -> List.fold_left (fun b u -> (appears t u) || b) false l
     | _ -> false;;
 
 let rec ty_replace s t u = 
@@ -128,6 +131,8 @@ let rec ty_replace s t u =
   else 
     match u with 
     | TFun (u1, u2) -> TFun(ty_replace s t u1, ty_replace s t u2)
+    | TList u -> TList (ty_replace s t u)
+    | TTup l -> TTup (List.map (fun u -> ty_replace s t u) l)
     | _ -> u;;
 
 let rec ty_unify = function
@@ -185,12 +190,12 @@ let rec gather_constraints tenv expr =
      let (ts, c) = List.fold_right 
 		     (fun e (ts, cs) ->
 		      let (t, c) = gather_constraints tenv e in 
-		     (t::ts, c @ cs)) l ([], [])in
+		      (t::ts, c @ cs)) l ([], [])in
      (TTup ts, c)
   | EAdd (e1, e2) | ESub (e1, e2) | EMul (e1, e2) | EDiv (e1, e2) -> 
-     let (t1, c1) = gather_constraints tenv e1 in
-     let (t2, c2) = gather_constraints tenv e2 in
-     (TInt, (t1, TInt)::(t2, TInt)::(c1 @ c2))
+						     let (t1, c1) = gather_constraints tenv e1 in
+						     let (t2, c2) = gather_constraints tenv e2 in
+						     (TInt, (t1, TInt)::(t2, TInt)::(c1 @ c2))
   | EEq (e1, e2) ->
      let (t1, c1) = gather_constraints tenv e1 in
      let (t2, c2) = gather_constraints tenv e2 in
@@ -226,11 +231,39 @@ let rec gather_constraints tenv expr =
      let (t2, c2) = gather_constraints tenv e2 in
      let a = TVar (new_tvar ()) in
      (a, (t1, TFun(t2, a))::(c1 @ c2))
-  (* | EMatch (e, cases) -> *)
-  (*    let v = eval_expr env e in *)
-  (*    let (bnd, ex) = find_match v cases in *)
-  (*    eval_expr (bnd @ env) ex *)
-  | _ -> raise (Eval_error "unsupported expression");;
+  | EMatch (e, cases) ->
+     let (t, c) = gather_constraints tenv e in
+     let a = TVar (new_tvar ()) in
+     let conds = List.fold_right
+		   (fun (p, ex) cnds -> 
+		    let (ti, ci, ei) = gather_constraints_pattern p in
+		    let (ti', ci')  = gather_constraints (ei @ tenv) ex in
+		    (t, ti)::(a, ti')::(ci @ ci' @ cnds)) cases [] in
+     (a, conds)
+  | _ -> raise (Eval_error "unsupported expression")
+
+and gather_constraints_pattern p = 
+  match p with
+  | PConst (VInt _) -> 
+     (TInt, [], [])
+  | PVar n -> 
+     let a = TVar (new_tvar ()) in
+     (a, [], [(n, a)])
+  | PNil -> 
+     let a = TVar (new_tvar ()) in
+     (TList a, [], [])
+  | PCons (p1, p2) ->
+     let (t1, c1, e1) = gather_constraints_pattern p1 in
+     let (t2, c2, e2) = gather_constraints_pattern p2 in
+     let a = TVar (new_tvar ()) in
+     (TList a, (a, t1)::(TList a, t2)::(c1 @ c2), e1 @ e2)
+  | PTup ps ->
+     let (ts, c, e) = List.fold_right 
+			(fun p (ts, cs, es) ->
+			 let (t, c, e) = gather_constraints_pattern p in 
+			 (t::ts, c @ cs, e @ es)) ps ([], [], []) in
+     (TTup ts, c, e)
+  | _ -> raise (Eval_error "match failure")
 
 let infer_expr tenv expr = 
   let (t, conds) = gather_constraints tenv expr in
