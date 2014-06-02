@@ -1,52 +1,55 @@
-関数・論理型プログラミング演習第5回レポート
+関数・論理型プログラミング演習第6回レポート
 氏名:八尋渉
 学籍番号:05-141032
 
 syntax.ml、w5.ml、w5lexer.mll、w5parser.mlyを流用した。
-ソースコード（全問共通): syntax.ml  w5.ml  w5interpreter.ml  w5lexer.mll  w5parser.mly
+ソースコード（全問共通): syntax.ml  w5.ml w5printer.ml w5interpreter.ml  w5lexer.mll  w5parser.mly
 
-問1 関数抽象・適用
+問1 tyの定義
 実行例:
-examples/fun*.ml
+なし
 考察:
-value型にVFunを追加し、eval_exprにEFunとEAppの評価ルールを追加した。
-VFunはクロージャとして実装し、定義は
-  VFun  of name * expr * env
-とした。
+以下のように型を表す型を定義した。
+type ty = 
+  | TInt
+  | TBool
+  | TFun of ty * ty
+  | TList of ty
+  | TTup of ty list
+  | TVar of tvar
 
-問2, 5 (相互)再帰関数
+問2 ty_sbstの定義
 実行例:
-examples/rec_fun*.ml	 再帰
-examples/mut_rec_fun*.ml 相互再帰
+なし
 考察:
-パーサの仕様の関係で、再帰関数と相互再帰関数を同時に実装した。
-value型にVRFunを追加し、eval_exprにおいて、ERLetsの評価ルールを追加し、EAppの評価ルールに再帰関数のものを追加した。
-VRFunは循環クロージャとして実装し、定義は
-  VRFun of name * expr * (env ref)
-とした。
-まだ型推論を実装していないので、不動点コンビネータも定義できる。
-対話環境のCRLetsの評価ルールも追加した。
+ty_sbstで与えられた型をintかboolか型変数まで展開し、型変数ならty_sbst_oneで型代入を検索し、新しい型に変換する。
 
-問3 パターンパッチング(定数と変数)
+問3 ty_unifyの定義
 実行例:
-examples/examples/match_const_var*.ml
+なし
 考察:
-eval_exprにEMatchの評価ルールを追加した。
-パターンマッチングの処理はfind_matchとmatchingの２つの関数から成り、
-matchingはパターン一つと値を受け取り、失敗したらNoneを、成功したらマッチングの結果の束縛条件を返す。
-find_matchは、match式の各パターンを、マッチングするものが現れるまでmatchingで評価し、成功した時点で束縛条件と矢印の右側の式の組みを返す。
+型制約の依存関係が循環していないかを調べるappears
+型制約に現れる型を置き換えるty_replace
+型制約を解いて型代入を作るty_unify
+を実装した。
 
-問4 リストとタプル
+問4 型推論付きインタープリタ
 実行例:
-examples/examples/list_tup*.ml
+examples以下の
+examples/fun*.ml				
+examples/rec_fun*.ml
+examples/mut_rec_fun*.ml 
+examples/list_tup*.ml (1-3,5のみ)
+※examples/mut_rec_fun2.mlは不動点コンビネータを含むため失敗する。
 考察:
-w5lexer.mllに','と';'のトークンを追加し、
-w5parser.mlyにリストとタプルのための文法を追加した。
-リストの略記法[1;2;3]も使えるようにした。
-exprにもタプル用のETupを、value型にVListとVTupを追加した。パーサーでは、lispのconsと同じように末尾にNil以外の値が来るのも許しているが、ocamlではそれが禁止されているので、
-両方value listとして実装した。
-  VList of value list
-  VTup  of value list
-eval_exprにEConsとENil及びETupの評価ルールを追加した。
-パターンマッチングもリストとタプルに対応し、そのためにpatにPTupを追加した。
+gather_constraintsで式の構造から型制約を作り、
+infer_exprでは式を受け取って、gather_constraintsで作った型制約をty_unifyに渡し、最終的にty_sbstで式の型を取り出す。
+infer_cmdは実装せず、メインループに含めた。
+リストとタプルも実装した。
+
+問5 パターンマッチの型推論
+実行例:
+examples以下のすべて
+考察:
+パターンから型と型制約と型環境の組みを返すgather_constraints_patternを実装した。
 
