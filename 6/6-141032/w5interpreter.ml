@@ -192,10 +192,13 @@ let rec gather_constraints tenv expr =
 		      let (t, c) = gather_constraints tenv e in 
 		      (t::ts, c @ cs)) l ([], [])in
      (TTup ts, c)
-  | EAdd (e1, e2) | ESub (e1, e2) | EMul (e1, e2) | EDiv (e1, e2) -> 
-						     let (t1, c1) = gather_constraints tenv e1 in
-						     let (t2, c2) = gather_constraints tenv e2 in
-						     (TInt, (t1, TInt)::(t2, TInt)::(c1 @ c2))
+  | EAdd (e1, e2) 
+  | ESub (e1, e2) 
+  | EMul (e1, e2) 
+  | EDiv (e1, e2) -> 
+     let (t1, c1) = gather_constraints tenv e1 in
+     let (t2, c2) = gather_constraints tenv e2 in
+     (TInt, (t1, TInt)::(t2, TInt)::(c1 @ c2))
   | EEq (e1, e2) ->
      let (t1, c1) = gather_constraints tenv e1 in
      let (t2, c2) = gather_constraints tenv e2 in
