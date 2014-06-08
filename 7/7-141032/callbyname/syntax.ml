@@ -32,12 +32,11 @@ and expr =
   | ENil   
   | ETup   of expr list
 
-and name_env = NEnv of (name * (expr * name_env)) list
+and thunk = name * (expr * env)
 
-and env = (name * value) list
+and env = Env of thunk list
   
-let empty_env: env = [];;
-let empty_name_env: env = [];;
+let empty_env: env = Env [];;
 
 type tvar = int
 
