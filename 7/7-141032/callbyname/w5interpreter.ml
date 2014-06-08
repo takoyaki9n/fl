@@ -101,6 +101,75 @@ let rec eval_expr env = function
      eval_expr (bnd @ env) ex
   | _ -> raise (Eval_error "unsupported expression");;
   
+let rec eval_expr_byname env = function
+  | EConst v -> v
+  | EVar (Name n) -> 
+     (try
+	 let NEnv lis = env in
+	 let (ex, ev) = List.assoc (Name n) lis in
+	 eval_expr_byname ev ex
+       with
+       |Not_found -> raise (Eval_error ("unbound variable " ^ n)))
+  | EFun (x, e) -> VFun (x, e, env)
+  | ENil -> VList []
+  | ECons (e1, e2) -> 
+     (match (eval_expr_byname env e1), (eval_expr_byname env e2) with
+      | v, VList l -> VList (v::l)
+      | _ -> raise (Eval_error "cons: arguments must be (_, list)"))
+  | ETup l -> VTup (List.map (eval_expr_byname env) l)
+  | EAdd (e1, e2) -> 
+     (match (eval_expr_byname env e1), (eval_expr_byname env e2) with
+      | VInt v1, VInt v2 -> VInt (v1 + v2)
+      | _ -> raise (Eval_error "add: arguments must be (int, int)"))
+  | ESub (e1, e2) -> 
+     (match (eval_expr_byname env e1), (eval_expr_byname env e2) with
+      | VInt v1, VInt v2 -> VInt (v1 - v2)
+      | _ -> raise (Eval_error "sub: arguments must be (int, int)"))
+  | EMul (e1, e2) -> 
+     (match (eval_expr_byname env e1), (eval_expr_byname env e2) with
+      | VInt v1, VInt v2 -> VInt (v1 * v2)
+      | _ -> raise (Eval_error "mul: arguments must be (int, int)"))
+  | EDiv (e1, e2) -> 
+     (match (eval_expr_byname env e1), (eval_expr_byname env e2) with
+      | VInt v1, VInt 0 -> raise (Eval_error "div: division by zero")
+      | VInt v1, VInt v2 -> VInt (v1 / v2)
+      | _ -> raise (Eval_error "div: arguments must be (int, int)"))
+  | EEq (e1, e2) -> 
+     (match (eval_expr_byname env e1), (eval_expr_byname env e2) with
+      | VInt v1, VInt v2 -> VBool (v1 = v2)
+      | VBool v1, VBool v2 -> VBool ((v1 && v2) || (not (v1 || v2)))
+      | _ -> raise (Eval_error "equal: arguments must be (int, int) or (bool, bool)"))
+  | ELT (e1, e2) -> 
+     (match (eval_expr_byname env e1), (eval_expr_byname env e2) with
+      | VInt v1, VInt v2 -> VBool (v1 < v2)
+      | _ -> raise (Eval_error "equal: arguments must be (int, int)"))
+  | EIf (e1, e2, e3) -> 
+     (match (eval_expr_byname env e1) with
+      | VBool v1  -> if v1 then (eval_expr_byname env e2) else (eval_expr_byname env e3)
+      | _ -> raise (Eval_error "if: arguments must be (bool, value, value)"))
+  | ELet (n, e1, e2) ->
+     let env = (n, (e1, env))::env in
+     eval_expr_byname env e2
+  (* | ERLets (lets, e) -> *)
+  (*    let envr = ref env in *)
+  (*    envr := List.fold_right (fun (n1, n2, ex) ev -> (n1, VRFun (n2, ex, envr))::ev) lets env ; *)
+  (*    eval_expr !envr e *)
+  | EApp (e1, e2) ->
+     (match (eval_expr_byname env e1) with
+      | VFun (x, f, ev) -> 
+	 let ev = (x, (e2, env))::ev in
+	 eval_expr_byname ev f
+      (* | VRFun (n, b, er) ->  *)
+      (* 	 let v = eval_expr env e2 in *)
+      (* 	 let e = (n, v)::!er in *)
+      (* 	 eval_expr e b *)
+      | _ -> raise (Eval_error "app: applying to not a function"))
+  (* | EMatch (e, cases) -> *)
+  (*    let v = eval_expr env e in *)
+  (*    let (bnd, ex) = find_match v cases in *)
+  (*    eval_expr (bnd @ env) ex *)
+  | _ -> raise (Eval_error "unsupported expression");;
+  
 let rec ty_sbst maps ty = 
   let rec ty_sbst_one mps v =
     match mps with

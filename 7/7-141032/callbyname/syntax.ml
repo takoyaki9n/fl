@@ -31,9 +31,13 @@ and expr =
   | ECons  of expr * expr 
   | ENil   
   | ETup   of expr list
+
+and name_env = NEnv of (name * (expr * name_env)) list
+
 and env = (name * value) list
   
 let empty_env: env = [];;
+let empty_name_env: env = [];;
 
 type tvar = int
 
