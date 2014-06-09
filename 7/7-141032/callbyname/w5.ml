@@ -14,27 +14,28 @@ let read_and_print env tenv f =
      | CLet (n, e) ->
 	let t = infer_expr tenv e in
      	let v = eval_expr env e in
-     	print_result (Some n) v t; f (add_env n (e, env) env) ((n, t)::tenv)
-     (* | CRLets lets -> *)
-     (* 	let tenv_tmp = List.fold_right  *)
-     (* 			 (fun (f, x, e) ev ->  *)
-     (* 			  (f, TFun(TVar (new_tvar ()), TVar (new_tvar ())))::ev)  *)
-     (* 			 lets tenv in *)
-     (* 	let conds = List.fold_right  *)
-     (* 		      (fun (f, x, e) conds -> *)
-     (* 		       let TFun (a, b) = List.assoc f tenv_tmp in *)
-     (* 		       let (t, c) = gather_constraints ((x, a)::tenv_tmp) e in *)
-     (* 		       (t, b)::(c @ conds)) lets [] in *)
-     (* 	let maps = ty_unify conds in *)
-     (* 	let tenv = List.fold_right  *)
-     (* 		     (fun (f, x, e) ev-> (f, ty_sbst maps (List.assoc f tenv_tmp))::ev) lets tenv in *)
-     (* 	let envr = ref env in *)
-     (* 	envr := List.fold_right (fun (f, x, e) ev ->  *)
-     (* 				 let v = VRFun (x, e, envr) in *)
-     (* 				 let t = List.assoc f tenv in *)
-     (* 				 print_result (Some f) v t; *)
-     (* 				 (f, v)::ev) lets env; *)
-     (* 	f !envr tenv *)
+     	print_result (Some n) v t; f (add_env n (e, ref env) env) ((n, t)::tenv)
+     | CRLets lets ->
+     	let tenv_tmp = List.fold_right
+     			 (fun (n, e) ev ->
+  			  (n, TVar (new_tvar ()))::ev)
+     			 lets tenv in
+     	let conds = List.fold_right
+     		      (fun (n, e) conds ->
+     		       let a = List.assoc n tenv_tmp in
+     		       let (t, c) = gather_constraints tenv_tmp e in
+     		       (t, a)::(c @ conds)) lets [] in
+     	let maps = ty_unify conds in
+     	let tenv = List.fold_right
+     		     (fun (n, e) ev-> 
+		      (n, ty_sbst maps (List.assoc n tenv_tmp))::ev) lets tenv in
+     	let envr = ref env in
+     	envr := List.fold_right (fun (n, e) ev -> add_env n (e, envr) ev) lets env;
+	List.map (fun (n, e) -> 
+     		  let t = List.assoc n tenv in
+     		  let v = eval_expr !envr e in
+     		  print_result (Some n) v t) lets;
+     	f !envr tenv
      | CExp e -> 
 	let t = infer_expr tenv e in
      	let v = eval_expr env e in
@@ -52,7 +53,7 @@ let read_and_print env tenv f =
      print_endline m; f env tenv
   | Failure e -> 
      print_endline ("Failure: " ^ e); f env tenv
-					
+
 let rec read_print_loop env tenv =
   read_and_print env tenv read_print_loop 
 		 

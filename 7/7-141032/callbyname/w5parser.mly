@@ -87,7 +87,8 @@ letrecs:
 ;
 
 letrec:
-| var var args EQ expr { ($1,$2, List.fold_right (fun a r -> EFun (a,r)) $3 $5) }
+| var var args EQ expr { ($1, EFun ($2, List.fold_right (fun a r -> EFun (a,r)) $3 $5)) }
+| var EQ expr { ($1, $3) }
 ;
 
 args:

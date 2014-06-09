@@ -4,7 +4,6 @@ type value =
   | VInt  of int
   | VBool of bool
   | VFun  of name * expr * env
-  | VRFun of name * expr * (env ref)
   | VCons of thunk * thunk
   | VNil
   | VTup  of thunk list
@@ -25,7 +24,7 @@ and expr =
   | EEq    of expr * expr 
   | EIf    of expr * expr * expr 
   | ELet   of name * expr * expr 
-  | ERLets of (name * name * expr) list * expr 
+  | ERLets of (name * expr) list * expr 
   | EMatch of expr * (pat * expr) list 
   | EFun   of name * expr 
   | EApp   of expr * expr 
@@ -33,7 +32,7 @@ and expr =
   | ENil   
   | ETup   of expr list
 
-and thunk = expr * env
+and thunk = expr * (env ref)
 
 and env = Env of (name * thunk) list
   
@@ -57,6 +56,6 @@ let empty_ty_env: ty_env = [];;
 
 type command =
   | CLet   of name * expr 
-  | CRLets of (name * name * expr) list 
+  | CRLets of (name * expr) list 
   | CExp of expr 
   | CQuit 

@@ -10,16 +10,16 @@ let rec pp_value fmt v =
   | VInt  i -> fprintf fmt "%d" i 
   | VBool b -> fprintf fmt "%B" b
   | VFun _ -> fprintf fmt "<fun>"
-  | VRFun _ -> fprintf fmt "<fun>"
+  (* | VRFun _ -> fprintf fmt "<fun>" *)
   | VNil | VCons (_, _) -> pp_vlist fmt v
   | VTup l -> pp_vtup fmt l
 
 and pp_vlist fmt v = 
   let rec pp_vlist' fmt = function
     | VNil -> fprintf fmt "" 
-    | VCons ((ex1, ev1), (ex2, ev2)) -> 
-       (let v1 = eval_expr ev1 ex1 in
-	let v2 = eval_expr ev2 ex2 in
+    | VCons ((ex1, evr1), (ex2, evr2)) -> 
+       (let v1 = eval_expr !evr1 ex1 in
+	let v2 = eval_expr !evr2 ex2 in
 	match v2 with
 	| VNil -> fprintf fmt "%a" pp_value v1
 	| VCons (_, _) -> fprintf fmt "%a;@ %a" pp_value v1 pp_vlist' v2)in
@@ -28,8 +28,8 @@ and pp_vlist fmt v =
 and pp_vtup fmt xs = 
   let rec pp_vtup' fmt = function
     | []    -> fprintf fmt "" 
-    | [(ex, ev)]   -> fprintf fmt "%a" pp_value (eval_expr ev ex) 
-    | (ex, ev)::xs -> fprintf fmt "%a,@ %a" pp_value (eval_expr ev ex) pp_vtup' xs in
+    | [(ex, evr)]   -> fprintf fmt "%a" pp_value (eval_expr !evr ex) 
+    | (ex, evr)::xs -> fprintf fmt "%a,@ %a" pp_value (eval_expr !evr ex) pp_vtup' xs in
   fprintf fmt "(@[<hov 2>%a@])" pp_vtup' xs
 
 let rec pp_type fmt = function
@@ -117,8 +117,8 @@ let rec pp_expr fmt = function
 and pp_alt fmt (p,e) =
   fprintf fmt "<@[<hov 2>%a,@,%a@]>" pp_pat p pp_expr e
 
-and pp_letrec fmt (f,n,e) =
-  fprintf fmt "<@[<hov 2>%a,@,%a,@,%a@]>" pp_name f pp_name n pp_expr e 
+and pp_letrec fmt (f,e) =
+  fprintf fmt "<@[<hov 2>%a,@,%a@]>" pp_name f pp_expr e 
 
 let rec pp_command fmt = function 
   | CLet (n,e) ->

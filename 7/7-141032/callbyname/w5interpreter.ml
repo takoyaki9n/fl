@@ -8,14 +8,14 @@ let rec eval_expr env = function
   | EVar (Name v) -> 
      (try
 	 let Env cnt = env in
-	 let (ex, ev) = List.assoc (Name v) cnt in
-	 eval_expr ev ex
+	 let (ex, evr) = List.assoc (Name v) cnt in
+	 eval_expr !evr ex
        with
        |Not_found -> raise (Eval_error ("unbound variable " ^ v)))
   | EFun (x, e) -> VFun (x, e, env)
   | ENil -> VNil
-  | ECons (e1, e2) -> VCons ((e1, env), (e2, env))
-  | ETup l -> VTup (List.map (fun ex -> (ex, env)) l)
+  | ECons (e1, e2) -> VCons ((e1, ref env), (e2, ref env))
+  | ETup l -> VTup (List.map (fun ex -> (ex, ref env)) l)
   | EAdd (e1, e2) -> 
      (match (eval_expr env e1), (eval_expr env e2) with
       | VInt v1, VInt v2 -> VInt (v1 + v2)
@@ -47,24 +47,20 @@ let rec eval_expr env = function
       | VBool v1  -> if v1 then (eval_expr env e2) else (eval_expr env e3)
       | _ -> raise (Eval_error "if: arguments must be (bool, value, value)"))
   | ELet (n, e1, e2) ->
-     let env = add_env n (e1, env) env in
+     let env = add_env n (e1, ref env) env in
      eval_expr env e2
-  (* | ERLets (lets, e) -> *)
-  (*    let envr = ref env in *)
-  (*    envr := List.fold_right (fun (n1, n2, ex) ev -> (n1, VRFun (n2, ex, envr))::ev) lets env ; *)
-  (*    eval_expr !envr e *)
+  | ERLets (lets, e) ->
+     let envr = ref env in
+     envr := List.fold_right (fun (n, ex) ev -> add_env n (ex, envr) ev) lets env;
+     eval_expr !envr e
   | EApp (e1, e2) ->
      (match (eval_expr env e1) with
       | VFun (n, b, e) -> 
-	 let e = add_env n (e2, env) e in
+	 let e = add_env n (e2, ref env) e in
 	 eval_expr e b
-      (* | VRFun (n, b, er) ->  *)
-      (* 	 let v = eval_expr env e2 in *)
-      (* 	 let e = (n, v)::!er in *)
-      (* 	 eval_expr e b *)
       | _ -> raise (Eval_error "app: applying to not a function"))
   | EMatch (ex, cases) ->
-     let (bnd, ex) = find_match (ex, env) cases in
+     let (bnd, ex) = find_match (ex, ref env) cases in
      eval_expr (cat_env bnd env) ex
   | _ -> raise (Eval_error "unsupported expression")
 
@@ -77,9 +73,16 @@ and cat_env env1 env2 =
   let Env cnt2 = env2 in
   Env (cnt1 @ cnt2)
 
+and find_match thk = function
+  | [] -> raise (Eval_error "match failure")
+  | (pat, ex)::cases ->
+     (match (matching thk pat) with
+      | None -> find_match thk cases
+      | Some bnd -> (bnd, ex))
+
 and matching thk p =
-  let ex, ev = thk in
-  let v = eval_expr ev ex in
+  let ex, evr = thk in
+  let v = eval_expr !evr ex in
   match v, p with
   | _, PConst c ->
      if v = c then Some empty_env else None
@@ -102,14 +105,7 @@ and match_tup thks pats =
   | thk::thks, pat::pats -> 
      match (matching thk pat), (match_tup thks pats) with
      | Some bnd1, Some bnd2 -> Some (cat_env bnd1 bnd2)
-     | _, _ -> None
-		 
-and find_match thk = function
-  | [] -> raise (Eval_error "match failure")
-  | (pat, ex)::cases ->
-     (match (matching thk pat) with
-      | None -> find_match thk cases
-      | Some bnd -> (bnd, ex));;
+     | _, _ -> None;;
   
 let rec ty_sbst maps ty = 
   let rec ty_sbst_one mps v =
@@ -144,7 +140,7 @@ let rec ty_replace s t u =
     | TList u -> TList (ty_replace s t u)
     | TTup l -> TTup (List.map (fun u -> ty_replace s t u) l)
     | _ -> u;;
-
+  
 let rec ty_unify = function
   | [] -> []
   | (s, t)::conds -> 
@@ -228,15 +224,15 @@ let rec gather_constraints tenv expr =
      let (t2, c2) = gather_constraints tenv e2 in
      (t2, c1@c2)
   | ERLets (lets, e) ->
-     let tenv = List.fold_right 
-		  (fun (f, x, e) ev -> 
-		   (f, TFun(TVar (new_tvar ()), TVar (new_tvar ())))::ev) 
-		  lets tenv in
-     let conds = List.fold_right 
-		   (fun (f, x, e) conds ->
-		    let TFun (a, b) = List.assoc f tenv in
-		    let (t, c) = gather_constraints ((x, a)::tenv) e in
-		    (t, b)::(c @ conds)) lets [] in
+     let tenv = List.fold_right
+  		  (fun (n, e) ev ->
+  		   (n, TVar (new_tvar ()))::ev)
+  		  lets tenv in
+     let conds = List.fold_right
+  		   (fun (n, e) conds ->
+		    let a = List.assoc n tenv in
+  		    let (t, c) = gather_constraints tenv e in
+  		    (t, a)::(c @ conds)) lets [] in
      let (t, c) = gather_constraints tenv e in
      (t, conds @ c)
   | EApp (e1, e2) ->
