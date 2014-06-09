@@ -1,6 +1,6 @@
-SOURCES = syntax.ml w5printer.ml w5lexer.mll w5parser.mly w5interpreter.ml w5.ml
+SOURCES = syntax.ml w5lexer.mll w5parser.mly w5interpreter.ml w5printer.ml w5.ml
 RESULT = w5
-TRASH = *~
+TRASH = *~ *.output
 OCAMLFLAGS = "-g"
 ## menhirを使用する場合は以下をアンコメントする
 # OCAMLYACC=menhir 

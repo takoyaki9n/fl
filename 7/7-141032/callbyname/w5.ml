@@ -1,8 +1,8 @@
 open Syntax
-open W5printer
 open W5parser
 open W5lexer
 open W5interpreter
+open W5printer
 
 let read_and_print env tenv f =
   try 
@@ -14,27 +14,27 @@ let read_and_print env tenv f =
      | CLet (n, e) ->
 	let t = infer_expr tenv e in
      	let v = eval_expr env e in
-     	print_result (Some n) v t; f ((n, v)::env) ((n, t)::tenv)
-     | CRLets lets ->
-	let tenv_tmp = List.fold_right 
-			 (fun (f, x, e) ev -> 
-			  (f, TFun(TVar (new_tvar ()), TVar (new_tvar ())))::ev) 
-			 lets tenv in
-	let conds = List.fold_right 
-		      (fun (f, x, e) conds ->
-		       let TFun (a, b) = List.assoc f tenv_tmp in
-		       let (t, c) = gather_constraints ((x, a)::tenv_tmp) e in
-		       (t, b)::(c @ conds)) lets [] in
-	let maps = ty_unify conds in
-	let tenv = List.fold_right 
-		     (fun (f, x, e) ev-> (f, ty_sbst maps (List.assoc f tenv_tmp))::ev) lets tenv in
-     	let envr = ref env in
-	envr := List.fold_right (fun (f, x, e) ev -> 
-				 let v = VRFun (x, e, envr) in
-				 let t = List.assoc f tenv in
-				 print_result (Some f) v t;
-				 (f, v)::ev) lets env;
-     	f !envr tenv
+     	print_result (Some n) v t; f (add_env n (e, env) env) ((n, t)::tenv)
+     (* | CRLets lets -> *)
+     (* 	let tenv_tmp = List.fold_right  *)
+     (* 			 (fun (f, x, e) ev ->  *)
+     (* 			  (f, TFun(TVar (new_tvar ()), TVar (new_tvar ())))::ev)  *)
+     (* 			 lets tenv in *)
+     (* 	let conds = List.fold_right  *)
+     (* 		      (fun (f, x, e) conds -> *)
+     (* 		       let TFun (a, b) = List.assoc f tenv_tmp in *)
+     (* 		       let (t, c) = gather_constraints ((x, a)::tenv_tmp) e in *)
+     (* 		       (t, b)::(c @ conds)) lets [] in *)
+     (* 	let maps = ty_unify conds in *)
+     (* 	let tenv = List.fold_right  *)
+     (* 		     (fun (f, x, e) ev-> (f, ty_sbst maps (List.assoc f tenv_tmp))::ev) lets tenv in *)
+     (* 	let envr = ref env in *)
+     (* 	envr := List.fold_right (fun (f, x, e) ev ->  *)
+     (* 				 let v = VRFun (x, e, envr) in *)
+     (* 				 let t = List.assoc f tenv in *)
+     (* 				 print_result (Some f) v t; *)
+     (* 				 (f, v)::ev) lets env; *)
+     (* 	f !envr tenv *)
      | CExp e -> 
 	let t = infer_expr tenv e in
      	let v = eval_expr env e in

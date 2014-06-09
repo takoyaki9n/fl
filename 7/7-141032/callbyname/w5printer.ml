@@ -1,5 +1,6 @@
 open Format 
 open Syntax
+open W5interpreter
 
 let pp_name fmt = function 
   | Name n -> fprintf fmt "%s" n
@@ -16,15 +17,19 @@ let rec pp_value fmt v =
 and pp_vlist fmt v = 
   let rec pp_vlist' fmt = function
     | VNil -> fprintf fmt "" 
-    | VCons (x, VNil) -> fprintf fmt "%a" pp_value x
-    | VCons (x, y) -> fprintf fmt "%a;@ %a" pp_value x pp_vlist' y in
+    | VCons ((ex1, ev1), (ex2, ev2)) -> 
+       (let v1 = eval_expr ev1 ex1 in
+	let v2 = eval_expr ev2 ex2 in
+	match v2 with
+	| VNil -> fprintf fmt "%a" pp_value v1
+	| VCons (_, _) -> fprintf fmt "%a;@ %a" pp_value v1 pp_vlist' v2)in
   fprintf fmt "[@[<hov 2>%a@]]" pp_vlist' v
-
+	  
 and pp_vtup fmt xs = 
   let rec pp_vtup' fmt = function
     | []    -> fprintf fmt "" 
-    | [x]   -> fprintf fmt "%a" pp_value x 
-    | x::xs -> fprintf fmt "%a,@ %a" pp_value x pp_vtup' xs in
+    | [(ex, ev)]   -> fprintf fmt "%a" pp_value (eval_expr ev ex) 
+    | (ex, ev)::xs -> fprintf fmt "%a,@ %a" pp_value (eval_expr ev ex) pp_vtup' xs in
   fprintf fmt "(@[<hov 2>%a@])" pp_vtup' xs
 
 let rec pp_type fmt = function

@@ -5,9 +5,9 @@ type value =
   | VBool of bool
   | VFun  of name * expr * env
   | VRFun of name * expr * (env ref)
-  | VCons of value * value
+  | VCons of thunk * thunk
   | VNil
-  | VTup  of value list
+  | VTup  of thunk list
 and pat =
   | PConst of value 
   | PVar   of name
@@ -32,9 +32,12 @@ and expr =
   | ECons  of expr * expr 
   | ENil   
   | ETup   of expr list
-and env = (name * value) list
+
+and thunk = expr * env
+
+and env = Env of (name * thunk) list
   
-let empty_env: env = [];;
+let empty_env: env = Env [];;
 
 type tvar = int
 
