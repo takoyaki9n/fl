@@ -4,20 +4,21 @@ open Syntax
 let pp_name fmt = function 
   | Name n -> fprintf fmt "%s" n
 
-let rec pp_value fmt = function 
+let rec pp_value fmt v = 
+  match v with
   | VInt  i -> fprintf fmt "%d" i 
   | VBool b -> fprintf fmt "%B" b
   | VFun _ -> fprintf fmt "<fun>"
   | VRFun _ -> fprintf fmt "<fun>"
-  | VList l -> pp_vlist fmt l
+  | VNil | VCons (_, _) -> pp_vlist fmt v
   | VTup l -> pp_vtup fmt l
 
-and pp_vlist fmt xs = 
+and pp_vlist fmt v = 
   let rec pp_vlist' fmt = function
-    | []    -> fprintf fmt "" 
-    | [x]   -> fprintf fmt "%a" pp_value x 
-    | x::xs -> fprintf fmt "%a;@ %a" pp_value x pp_vlist' xs in
-  fprintf fmt "[@[<hov 2>%a@]]" pp_vlist' xs
+    | VNil -> fprintf fmt "" 
+    | VCons (x, VNil) -> fprintf fmt "%a" pp_value x
+    | VCons (x, y) -> fprintf fmt "%a;@ %a" pp_value x pp_vlist' y in
+  fprintf fmt "[@[<hov 2>%a@]]" pp_vlist' v
 
 and pp_vtup fmt xs = 
   let rec pp_vtup' fmt = function
