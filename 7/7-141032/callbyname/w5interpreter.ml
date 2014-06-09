@@ -82,20 +82,26 @@ and find_match thk = function
 
 and matching thk p =
   let ex, evr = thk in
-  let v = eval_expr !evr ex in
-  match v, p with
-  | _, PConst c ->
+  match p with
+  | PConst c ->
+     let v = eval_expr !evr ex in
      if v = c then Some empty_env else None
-  | _, PVar n ->
+  | PVar n ->
      Some (add_env n thk empty_env)
-  | VNil, PNil ->
-     Some Syntax.empty_env
-  | VCons (x, y), PCons (p1, p2) ->
-     (match (matching x p1), (matching y p2) with
-      | Some bnd1, Some bnd2 -> Some (cat_env bnd1 bnd2)
-      | _, _ -> None)
-  | VTup thks, PTup pats ->
-     match_tup thks pats
+  | PNil ->
+     let v = eval_expr !evr ex in
+     if v = VNil then Some empty_env else None
+  | PCons (p1, p2) ->
+     (match (eval_expr !evr ex) with
+      | VCons (t1, t2) -> 
+	 (match (matching t1 p1), (matching t2 p2) with
+	  | Some bnd1, Some bnd2 -> Some (cat_env bnd1 bnd2)
+	  | _, _ -> None)
+      | _ -> None)
+  | PTup pats ->
+     (match (eval_expr !evr ex) with
+      | VTup thks -> match_tup thks pats
+      | _ -> None)
   | _ -> None
 
 and match_tup thks pats =
