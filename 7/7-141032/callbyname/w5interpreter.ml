@@ -3,37 +3,6 @@ open Syntax
 exception Eval_error of string;;
 exception Type_error of string;;
 
-(* let rec matching v p = *)
-(*   match v, p with *)
-(*   | _, PConst c -> *)
-(*      if v = c then Some empty_env else None *)
-(*   | _, PVar n -> *)
-(*      Some [(n, v)] *)
-(*   | VNil, PNil ->  *)
-(*      Some Syntax.empty_env *)
-(*   | VCons (x, xs), PCons (p1, p2) -> *)
-(*      (match (matching x p1), (matching xs p2) with  *)
-(*       | Some bnd1, Some bnd2 -> Some (bnd1 @ bnd2) *)
-(*       | _, _ -> None) *)
-(*   | VTup [], PTup [] -> *)
-(*      Some Syntax.empty_env *)
-(*   | VTup (x::xs), PTup (y::ys) -> *)
-(*      (match (matching x y), (matching (VTup xs) (PTup ys)) with  *)
-(*       | Some bnd1, Some bnd2 -> Some (bnd1 @ bnd2) *)
-(*       | _, _ -> None) *)
-(*   | _ -> None;; *)
-  
-(* let rec find_match v = function *)
-(*   | [] -> raise (Eval_error "match failure") *)
-(*   | (pat, ex)::cases ->  *)
-(*      (match (matching v pat) with *)
-(*       | None -> find_match v cases *)
-(*       | Some bnd -> (bnd, ex));; *)
-  
-let add_env name thunk env =
-  let Env cnt = env in
-  Env ((name, thunk)::cnt);;
-
 let rec eval_expr env = function
   | EConst v -> v
   | EVar (Name v) -> 
@@ -94,11 +63,53 @@ let rec eval_expr env = function
       (* 	 let e = (n, v)::!er in *)
       (* 	 eval_expr e b *)
       | _ -> raise (Eval_error "app: applying to not a function"))
-  (* | EMatch (e, cases) -> *)
-  (*    let v = eval_expr env e in *)
-  (*    let (bnd, ex) = find_match v cases in *)
-  (*    eval_expr (bnd @ env) ex *)
-  | _ -> raise (Eval_error "unsupported expression");;
+  | EMatch (ex, cases) ->
+     let (bnd, ex) = find_match (ex, env) cases in
+     eval_expr (cat_env bnd env) ex
+  | _ -> raise (Eval_error "unsupported expression")
+
+and add_env name thunk env =
+  let Env cnt = env in
+  Env ((name, thunk)::cnt)
+
+and cat_env env1 env2 =
+  let Env cnt1 = env1 in
+  let Env cnt2 = env2 in
+  Env (cnt1 @ cnt2)
+
+and matching thk p =
+  let ex, ev = thk in
+  let v = eval_expr ev ex in
+  match v, p with
+  | _, PConst c ->
+     if v = c then Some empty_env else None
+  | _, PVar n ->
+     Some (add_env n thk empty_env)
+  | VNil, PNil ->
+     Some Syntax.empty_env
+  | VCons (x, y), PCons (p1, p2) ->
+     (match (matching x p1), (matching y p2) with
+      | Some bnd1, Some bnd2 -> Some (cat_env bnd1 bnd2)
+      | _, _ -> None)
+  | VTup thks, PTup pats ->
+     match_tup thks pats
+  | _ -> None
+
+and match_tup thks pats =
+  match thks, pats with
+  | [], [] -> 
+     Some Syntax.empty_env
+  | thk::thks, pat::pats -> 
+     match (matching thk pat), (match_tup thks pats) with
+     | Some bnd1, Some bnd2 -> Some (cat_env bnd1 bnd2)
+     | _, _ -> None
+		 
+and find_match thk = function
+  | [] -> raise (Eval_error "match failure")
+  | (pat, ex)::cases ->
+     (match (matching thk pat) with
+      | None -> find_match thk cases
+      | Some bnd -> (bnd, ex));;
   
 let rec ty_sbst maps ty = 
   let rec ty_sbst_one mps v =
