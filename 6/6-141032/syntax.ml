@@ -5,7 +5,8 @@ type value =
   | VBool of bool
   | VFun  of name * expr * env
   | VRFun of name * expr * (env ref)
-  | VList of value list
+  | VCons of value * value
+  | VNil
   | VTup  of value list
 and pat =
   | PConst of value 

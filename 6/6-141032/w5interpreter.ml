@@ -11,10 +11,10 @@ let rec matching v p =
      if v = c then Some empty_env else None
   | _, PVar n ->
      Some [(n, v)]
-  | VList [], PNil -> 
+  | VNil, PNil -> 
      Some Syntax.empty_env
-  | VList (x::xs), PCons (p1, p2) ->
-     (match (matching x p1), (matching (VList xs) p2) with 
+  | VCons (x, xs), PCons (p1, p2) ->
+     (match (matching x p1), (matching xs p2) with 
       | Some bnd1, Some bnd2 -> Some (bnd1 @ bnd2)
       | _, _ -> None)
   | VTup [], PTup [] ->
@@ -40,11 +40,13 @@ let rec eval_expr env = function
        with
        |Not_found -> raise (Eval_error ("unbound variable " ^ v)))
   | EFun (x, e) -> VFun (x, e, env)
-  | ENil -> VList []
+  | ENil -> VNil
   | ECons (e1, e2) -> 
-     (match (eval_expr env e1), (eval_expr env e2) with
-      | v, VList l -> VList (v::l)
-      | _ -> raise (Eval_error "cons: arguments must be (_, list)"))
+     let v1 = eval_expr env e1 in
+     let v2 = eval_expr env e2 in
+     (match v2 with
+      | VNil | VCons (_, _) -> VCons (v1, v2)
+      | _ -> raise (Eval_error "cons: arguments must be (value, vcons)"))
   | ETup l -> VTup (List.map (eval_expr env) l)
   | EAdd (e1, e2) -> 
      (match (eval_expr env e1), (eval_expr env e2) with
