@@ -1,3 +1,5 @@
+module Sorts where
+
 insSort [] = []
 insSort (x:xs) = 
   insert x (insSort xs)
@@ -6,10 +8,9 @@ insSort (x:xs) =
     insert x (y:ys) 
       | x < y     = (x:y:ys)
       | otherwise = y:(insert x ys)
-
+    
 quickSort [] = []
-quickSort (x:xs) = 
-  (filter (<= x) xs) ++ [x] ++ (filter (> x) xs)
+quickSort (x:xs) = (quickSort (filter (<= x) xs)) ++ [x] ++ (quickSort (filter (> x) xs))
     
 selectionSort [] = []
 selectionSort (x:xs) =
@@ -37,3 +38,4 @@ mergeSort xs =
     msort [] = []
     msort [xs] = xs
     msort xss = msort (mergen xss)
+    

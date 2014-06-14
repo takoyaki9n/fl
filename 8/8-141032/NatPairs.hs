@@ -1,3 +1,5 @@
+module Natpairs where
+
 natPairs = foldr1 (\ x y -> x ++ y) (map (\n -> pairs n) [2..])
   where
     pairs n | n < 2     = []
