@@ -251,6 +251,8 @@ and gather_constraints_pattern p =
   match p with
   | PConst (VInt _) -> 
      (TInt, [], [])
+  | PConst (VBool _) -> 
+     (TBool, [], [])
   | PVar n -> 
      let a = TVar (new_tvar ()) in
      (a, [], [(n, a)])
