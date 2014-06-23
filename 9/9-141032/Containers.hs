@@ -31,3 +31,11 @@ instance Container BT where
         where 
           (l', zs) = fill' l ys
           (r', ws) = fill' r zs
+
+size :: Container f => f a -> Int
+size xs = length (contents xs)
+
+sumall :: (Num a, Container f) => f a -> a
+sumall xs = sum (contents xs)
+
+--(B (B (B (L 1) (L 2)) (L 3)) (L 4))
