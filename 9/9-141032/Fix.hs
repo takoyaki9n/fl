@@ -23,22 +23,18 @@ toList = cata f
   where 
     f Nil         = []
     f (Cons x xs) = x:xs
-    
+
 toInt = cata f 
   where 
     f Zero     = 0
     f (Succ n) = 1 + n
-    
+
 add n = cata f
   where
     f Zero = n
     f (Succ m) = In (Succ m)
-    
+
 sum = cata f
   where
     f Nil         = In Zero
     f (Cons n ns) = add n ns
-
--- toList (In (Cons 3 (In (Cons 2 (In (Cons 1 (In Nil)))))))
--- toInt (Fix.sum (In (Cons (In (Succ (In Zero))) (In (Cons (In (Succ (In (Succ (In Zero))))) (In (Cons (In (Succ (In (Succ (In (Succ (In Zero))))))) (In Nil))))))))
--- sum (In Nil)

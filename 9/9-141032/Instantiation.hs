@@ -1,34 +1,48 @@
 module Instantiation where
 
-data Card = Club Int | Diamond Int | Heart Int | Spade Int | Joker
+data Suit = Club | Diamond | Heart | Spade
+data Card = Card Suit Int | Joker
 data LList a = Nil | Cons a (LList a)
 data BT a = L a | B (BT a) (BT a)
 
+instance Eq Suit where
+  Club    == Club    = True
+  Diamond == Diamond = True
+  Heart   == Heart   = True
+  Spade   == Spade   = True
+  _         == _     = False
+
+instance Ord Suit where
+  Club    <= Club    = True
+  Club    <= Diamond = True
+  Club    <= Heart   = True
+  Club    <= Spade   = True
+  Diamond <= Diamond = True
+  Diamond <= Heart   = True
+  Diamond <= Spade   = True
+  Heart   <= Heart   = True
+  Heart   <= Spade   = True
+  Spade   <= Spade   = True
+  _       <= _       = False
+
+instance Show Suit where
+  show Club    = "♣"
+  show Diamond = "♦"
+  show Heart   = "♥"
+  show Spade   = "♠"
+
 instance Eq Card where
-  Club a    == Club b    = a == b
-  Diamond a == Diamond b = a == b
-  Heart a   == Heart b   = a == b
-  Spade a   == Spade b   = a == b
+  Card s n  == Card t m  = (s == t) && (n == m)
   Joker     == Joker     = True
   _         == _         = False
 
 instance Ord Card where
-  Club a    <= Club b     = a <= b
-  Club _    <= _          = True
-  Diamond a <=  Diamond b = a <= b
-  Diamond _ <= _          = True
-  Heart a   <= Heart b    = a <= b
-  Heart _   <= _          = True
-  Spade a  <= Spade b     = a <= b
-  Spade _  <= _           = True
-  Joker    <= Joker       = True
-  _        <= _           = False
+  Card s n  <= Card t m  = if n == m then s <= t else n <= m 
+  _         <= Joker     = True
+  _         <= _         = False
 
 instance Show Card where
-  show (Club a)    = "♣ " ++ show a
-  show (Diamond a) = "♦ " ++ show a
-  show (Heart a)   = "♥ " ++ show a
-  show (Spade a)   = "♠ " ++ show a
+  show (Card s n)    = show s ++ " " ++ show n
   show Joker       = "Joker"
 
 instance (Eq a) => Eq (LList a) where
