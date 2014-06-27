@@ -1,0 +1,98 @@
+関数・論理型プログラミング演習第9回レポート
+氏名:八尋渉
+学籍番号:05-141032
+
+問1 インスタンス化
+ソースコード: Instantiation.hs
+実行例:
+> :load Instantiation.hs
+> Card Club 2
+♣ 2
+> Joker
+Joker
+> Card Diamond  1 <= Card Diamond  10
+True
+> Card Spade 10 <= Card Diamond  2
+False
+> Cons 1 (Cons 2 (Cons 3 Nil))
+1::2::3
+> B (B (L 1) (B (L 2) (L 3))) (L 4)
+((1, (2, 3)), 4)
+考察:
+トランプのスートを表すSuit、トランプの札を表すCardについてEq、Ord、Showのインスタンスにした。
+Ordのルールについては、番号優先で、スートの強さは♣<♦<♥<♠とした。
+他に、連結リストと2分木について、EqとShowのインスタンス化した。
+
+問2 コンテナ
+ソースコード:Containers.hs
+実行例:
+> :load Containers.hs
+> let l = Cons 1 (Cons 2 (Cons 3 (Cons 4 Nil)))
+> l
+1::2::3::4
+> contents l
+[1,2,3,4]
+> fill l [1,1,1,1]
+1::1::1::1
+> size l
+4
+> sumall l
+10
+> let t = B (B (L 1) (B (L 2) (L 3))) (L 4)
+> t
+((1, (2, 3)), 4)
+> contents t
+[1,2,3,4]
+> fill t [1,1,1,1]
+((1, (1, 1)), 1)
+> size t
+4
+> sumall t
+10
+考察:
+前問のLListとBTについてConteinerのインスタンス化を行った。
+contentsを用いて、大きさを計算するsizeと、要素の和を計算するsumallを定義した。
+
+問3 Fix
+ソースコード:Fix.hs
+実行例:
+> :load Fix.hs
+> toInt (In (Succ (In (Succ (In Zero)))))
+2
+> toList (In (Cons 3 (In (Cons 2 (In (Cons 1 (In Nil)))))))
+[3,2,1]
+> let n1  = (In (Succ (In (Succ (In Zero)))))
+> let n2  = (In (Succ (In (Succ (In (Succ (In Zero)))))))
+> toInt (add n1 n2)
+5
+> toInt (Fix.sum (In (Cons (In (Succ (In Zero))) (In (Cons (In (Succ (In (Succ (In Zero))))) (In (Cons (In (Succ (In (Succ (In (Succ (In Zero))))))) (In Nil))))))))
+6
+考察:
+cataの定義については、スライドにあった式
+cata f . In = f . fmap (cata f)
+をヒントとして、Inの逆写像となる(つまり、Inを取りさる)outを定義して
+cata g  = g . fmap (cata g) . out
+とした。
+
+問4 ListLike
+ソースコード: ListLike.hs
+実行例:
+> :load ListLike.hs
+> let t = C 1 (F (C 2 N) (C 3 (C 4 N)))
+> t
+C 1 (F (C 2 N) (C 3 (C 4 N)))
+> cons 2 t
+C 2 (C 1 (F (C 2 N) (C 3 (C 4 N))))
+> app t t
+F (C 1 (F (C 2 N) (C 3 (C 4 N)))) (C 1 (F (C 2 N) (C 3 (C 4 N))))
+> toList t
+[1,2,3,4]
+> toList (app t t)
+[1,2,3,4,1,2,3,4]
+> ListLike.reverse t
+C 4 (C 3 (C 2 (C 1 N)))
+考察:
+型クラスListLikeについて、snoc、revを定義した。
+snocは、appを利用して要素数1のリストとつなげるという方法で実装した。
+revは、先頭の要素を順次snocで末尾に追加していく方法で実装した。
+
