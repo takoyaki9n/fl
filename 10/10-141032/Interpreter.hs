@@ -1,3 +1,6 @@
+{-
+let ex = ELet "x" (EConst (VInt 3)) (EMul (EVar "x") (EVar "x"))in eval ex
+-}
 module Interpreter where
 
 import Data.Map
