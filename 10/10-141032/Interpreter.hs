@@ -27,16 +27,16 @@ data Exp = EConst Value
          | ELet Name Exp Exp
          deriving Show
 
-data Evald a = Err String | OK a
-instance Show a => Show (Evald a) where
+data Result a = Err String | OK a
+instance Show a => Show (Result a) where
   show (Err s) = s
   show (OK  x) = show x
-instance Monad Evald where
+instance Monad Result where
   return  = OK
   Err s >>= f = Err s
   OK x  >>= f = f x
 
-newtype Calc a = Calc {runCalc :: Reader Env (Evald a)}
+newtype Calc a = Calc {runCalc :: Reader Env (Result a)}
 instance Monad Calc where
   return x = Calc $ return (OK x)
   c >>= f = 

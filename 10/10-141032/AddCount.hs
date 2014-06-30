@@ -22,16 +22,16 @@ data Exp = EConst Value
          | EIf Exp Exp Exp
          deriving Show
 
-data Evald a = Err String | OK a
-instance Show a => Show (Evald a) where
+data Result a = Err String | OK a
+instance Show a => Show (Result a) where
   show (Err s) = s
   show (OK  x) = show x
-instance Monad Evald where
+instance Monad Result where
   return  = OK
   Err s >>= f = Err s
   OK x  >>= f = f x
 
-newtype AddCountCalc a = ACC {runACC :: State Int (Evald a)}
+newtype AddCountCalc a = ACC {runACC :: State Int (Result a)}
 instance Monad AddCountCalc where
   return x = ACC $ return (OK x)
   ct >>= f = 
