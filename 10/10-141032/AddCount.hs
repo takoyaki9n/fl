@@ -1,10 +1,10 @@
 {-
+let ex = EAdd (EAdd (EConst (VInt 2)) (EConst (VInt 5))) (EConst (VInt 5)) in eval ex
 let ex = EAdd (EAdd (EConst (VInt 2)) (EConst (VInt 5))) (EConst (VBool True)) in eval ex
 let ex = EAdd (EConst (VBool True)) (EAdd (EConst (VInt 2)) (EConst (VInt 5)))  in eval ex
 -}
 module AddCount where
 import Control.Monad.State
-import Control.Monad.Trans
 
 data Value = VInt Int
            | VBool Bool
@@ -22,16 +22,16 @@ data Exp = EConst Value
          | EIf Exp Exp Exp
          deriving Show
 
-data Calc a = Err String | OK a
-instance Show a => Show (Calc a) where
+data Evald a = Err String | OK a
+instance Show a => Show (Evald a) where
   show (Err s) = s
   show (OK  x) = show x
-instance Monad Calc where
+instance Monad Evald where
   return  = OK
   Err s >>= f = Err s
   OK x  >>= f = f x
 
-newtype AddCountCalc a = ACC {runACC :: State Int (Calc a)}
+newtype AddCountCalc a = ACC {runACC :: State Int (Evald a)}
 instance Monad AddCountCalc where
   return x = ACC $ return (OK x)
   ct >>= f = 
@@ -41,7 +41,7 @@ instance Monad AddCountCalc where
                  OK  x -> runACC (f x)                 
   fail s = ACC $ return (Err s)
   
-liftACC m = ACC $ m >>= return . OK
+liftToACC m = ACC $ m >>= return . OK
 
 instance Show a => Show (AddCountCalc a) where
   show (ACC ct) = 
@@ -56,7 +56,7 @@ eval (EAdd e1 e2) =
   do v1 <- eval e1
      v2 <- eval e2
      case (v1, v2) of
-       (VInt x, VInt y) -> (liftACC cntUp) >> (return $ VInt (x + y))
+       (VInt x, VInt y) -> (liftToACC cntUp) >> (return $ VInt (x + y))
        _ -> fail "add: Type unmatch"
 eval (ESub e1 e2) = 
   do v1 <- eval e1
