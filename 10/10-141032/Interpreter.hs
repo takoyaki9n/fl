@@ -1,6 +1,3 @@
-{-
-let ex = ELet "x" (EConst (VInt 3)) (EMul (EVar "x") (EVar "x"))in eval ex
--}
 module Interpreter where
 
 import Data.Map
@@ -8,6 +5,7 @@ import Control.Monad.Reader
 
 data Value = VInt Int
            | VBool Bool
+--             deriving Show
 instance Show Value where
   show (VInt i)  = show i
   show (VBool b) = show b

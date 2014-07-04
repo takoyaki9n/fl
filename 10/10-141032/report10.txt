@@ -1,0 +1,93 @@
+関数・論理型プログラミング演習第10回レポート
+氏名:八尋渉
+学籍番号:05-141032
+
+問1 eval
+ソースコード: Interpreter.hs
+実行例:
+> :load Interpreter.hs
+> let exp = EAdd (EConst (VInt 3)) (EConst (VInt 6)) in eval exp
+9
+> let exp = EIf (EConst (VBool True)) (EConst (VBool False)) (EConst (VBool True)) in eval exp
+False
+> let exp = EIf (ELt (EConst (VInt 3)) (EAdd (EConst (VInt 3)) (EConst (VInt 8)))) (EConst (VBool True)) (EMul (EDiv (EConst (VInt 4)) (EConst (VInt 9))) (EConst (VInt 7))) in eval exp
+True
+> let exp = EAdd (EAdd (EConst (VInt 2)) (EConst (VInt 5))) (EConst (VBool True)) in eval exp
+add: Type unmatch
+考察:
+値はValue、式木はExp、計算の結果はResultとし、ResultをMonadのInstanceにして、エラーが発生した場合にはそれ以降の処理を行わないようにした。
+
+問2 加算の回数
+ソースコード:　AddCount.hs
+実行例:
+> :load AddCount.hs
+> let exp = EAdd (EConst (VInt 3)) (EConst (VInt 6)) in eval exp
+9 (1 times added)
+> let exp = EIf (EConst (VBool True)) (EConst (VBool False)) (EConst (VBool True)) in eval exp
+False (0 times added)
+> let exp = EIf (ELt (EConst (VInt 3)) (EAdd (EConst (VInt 3)) (EConst (VInt 8)))) (EConst (VBool True)) (EMul (EDiv (EConst (VInt 4)) (EConst (VInt 9))) (EConst (VInt 7))) in eval exp
+True (1 times added)
+> let exp = EAdd (EAdd (EConst (VInt 2)) (EConst (VInt 5))) (EConst (VBool True)) in eval exp
+add: Type unmatch (1 times added)
+考察:
+加算の回数を数えるために、ResultをStateモナドに包んで、それを新たにAddCountCalcという型にした。
+また、evalのdoブロックの文脈はAddCountCalcなので、カウントアップするためにStateモナドであるcntUpをliftToACCで持ち上げている。
+
+問3 letの追加
+ソースコード: Interpreter.hs
+実行例:
+> :load Interpreter.hs
+> let exp = ELet "x" (EConst (VInt 4)) (EMul (EVar "x") (EVar "x")) in eval exp
+16
+> let exp = ELet "x" (EConst (VInt 1)) (ELet "y" (EAdd (EVar "x") (EVar "x")) (ELet "x" (EAdd (EVar "y") (EVar "x")) (EVar "x"))) in eval exp
+3
+考察:
+新たに変数をあらわすName型を用意し、環境はNameからValueへのMapとした。
+環境を実現するためにReaderモナドを用い、これでResultを包んでCalc型にした。
+変数の評価はData.map.lookpuで環境を参照し、変数の束縛はlocalでおこなった、例によってCalcの文脈に持ち上げるためにliftToCalcをつかった。
+
+問4 Parser
+ソースコード: Parser.hs
+実行例:
+> :load Parser.hs
+> parse (char 'a') "aaa"
+[('a',"aa")]
+> parse ((char 'a') +++ (char 'b'))  "baa"
+[('b',"aa")]
+> parse (string "hoge")  "hogera"
+[("hoge","ra")]
+> parse number  "0"
+[(0,"")]
+> parse number  "011"
+[(0,"11")]
+> parse number  "123 456"
+[(123," 456")]
+> parse space  "  123"
+[((),"123")]
+考察:
+charは文字列の先頭が与えられたものと等しければそれを取り除いて返し、そうでなければ空のリストを返す。
+(+++)は2つのParserの解析結果のリストをつなげて返すParserを作る。
+stringは1文字づつパースしていくだけだが、numberはそのままでは左再帰になってしまうので、各桁をリストにして、あとで10倍しながら足し上げる方法をとった。
+また、numberの形は先頭が0となるのは0だけとした。更に、後で余計な場合分けが増えないように、numberとspaceはマッチするもののうちで最長のもの(残りの文字列が最短になるもの)を選ぶことにした。
+
+問5 インタープリタ
+ソースコード: Parser.hs Main.hs
+実行例:
+> :load Main.hs
+> 3
+3
+> True
+True
+> x + 5
+undefined variable: x
+> if 5 < 8 then True else False
+True
+> let x = 9 in x * 8
+72
+> if x == 0 then 5
+Parse Error
+考察:
+前門のパーサーに更に変数のルールと文法を追加し、パーサーを完成させた。
+開始状態はstartとし、文字列を完全にパースし終えたかどうかをcompleteで判定している。
+Main.hsにREPLを作り、標準入力から文字列を受け取り、構文解析、evalして値を表示できるようにした。
+

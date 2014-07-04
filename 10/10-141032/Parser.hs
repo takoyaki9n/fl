@@ -169,9 +169,6 @@ factor_expr' =
   return id
 
 simple_expr = 
-  (do n <- token var
-      return (EVar n))
-  +++
   (do x <- token number
       return (EConst (VInt x)))
   +++
@@ -186,3 +183,6 @@ simple_expr =
   (do symb "-"
       e <- simple_expr
       return (ESub (EConst (VInt 0)) e))
+  +++
+  (do n <- token var
+      return (EVar n))

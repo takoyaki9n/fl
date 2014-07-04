@@ -1,8 +1,3 @@
-{-
-let ex = EAdd (EAdd (EConst (VInt 2)) (EConst (VInt 5))) (EConst (VInt 5)) in eval ex
-let ex = EAdd (EAdd (EConst (VInt 2)) (EConst (VInt 5))) (EConst (VBool True)) in eval ex
-let ex = EAdd (EConst (VBool True)) (EAdd (EConst (VInt 2)) (EConst (VInt 5)))  in eval ex
--}
 module AddCount where
 import Control.Monad.State
 
