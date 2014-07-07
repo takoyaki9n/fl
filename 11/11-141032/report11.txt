@@ -1,0 +1,73 @@
+関数・論理型プログラミング演習第11回レポート
+氏名:八尋渉
+学籍番号:05-141032
+
+問1 sibling
+ソースコード: family.hs
+実行例:
+?- ['family.pl'].
+% family.pl compiled 0.00 sec, 6,080 bytes
+true.
+
+?- sibling(katsuo, sazae).
+true .
+
+?- sibling(katsuo, katsuo).
+false.
+
+?- sibling(katsuo, masuo).
+false.
+考察:
+「同じ親を持つ自分以外の者」としてsiblingを定義した。
+
+問2 bloodrelative
+ソースコード: family.hs
+実行例:
+?- bloodrelative(masuo, tarao).
+true .
+
+?- bloodrelative(masuo, sazae).
+false.
+
+?- bloodrelative(katsuo, tarao).
+true .
+
+?- bloodrelative(katsuo, namihei).
+true .
+
+?- bloodrelative(katsuo, sazae).
+true .
+考察:
+スライドのancestorを使って「同じ祖先を持つもの」として定義した場合、家系図の一番上の者とその子孫との関係が表現できないので、「直系の先祖または直系の子孫または共通の祖先を持つ者」として定義した。
+
+問3 reverse, concat
+ソースコード: list.pl
+実行例:
+?- ['list.pl'].
+% list.pl compiled 0.00 sec, 3,384 bytes
+true.
+
+?- reverse([1,2,3,4], X).
+X = [4, 3, 2, 1].
+
+?- concat([[1],[2,3],[4,5,6]], X).
+X = [1, 2, 3, 4, 5, 6].
+考察:
+reverseは末尾再帰で書いた。
+concatはappenndを使って書いた。
+
+問4 hamilton
+ソースコード: graph.pl
+実行例:
+?- ['graph.pl'].
+% graph.pl compiled 0.00 sec, 32 bytes
+true.
+
+?- hamilton([1,2,3,4], [{1,[2,3,4]},{2,[4]},{3,[1]},{4,[]}]).
+true .
+
+?- hamilton([1,2,3,4], [{1,[2,3,4]},{2,[4]},{3,[]},{4,[]}]).
+false.
+考察:
+グラフは有向グラフとした。
+辺集合は、始点と終点のリストとのペアとした。
