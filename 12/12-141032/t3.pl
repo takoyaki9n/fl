@@ -57,9 +57,3 @@ range(I, N, []) :- I > N.
 range(I, N, [I|X]) :- I =< N, J is I + 1, range(J, N, X), !.
 range_rev(I, N, []) :- I > N.
 range_rev(I, N, [N|X]) :- I =< N, M is N - 1, range_rev(I, M, X), !.
-
-/*
-cxc
--xx
-xcc
-*/
