@@ -33,23 +33,11 @@ move([[A]|P], B, [[A]|Q]) :- move(P, B, Q).
 opposite(x, c).
 opposite(c, x).
 
-win_game(X, A) :- 
-	(col(X, Z); row(X, Z); crs(X, Z)),
-	win_line(Z, A),
-	A \= z, !.
-
-win_line([A], A).
-win_line([A|X], A) :- win_line(X, C), A = C, !.
-win_line([_|_], z).
-
-col(X, Y) :- nth1(_, X, Y).
-row(X, Y) :- maplist(nth1(_), X, Y).
-crs(X, Y) :-
-	length(X, N),
-	(range(1, N, Z); range_rev(1, N, Z)),
-	maplist(nth1, Z, X, Y).
-
-range(I, N, []) :- I > N.
-range(I, N, [I|X]) :- I =< N, J is I + 1, range(J, N, X), !.
-range_rev(I, N, []) :- I > N.
-range_rev(I, N, [N|X]) :- I =< N, M is N - 1, range_rev(I, M, X), !.
+win_game([[A,A,A],[_,_,_],[_,_,_]], A).
+win_game([[_,_,_],[A,A,A],[_,_,_]], A).
+win_game([[_,_,_],[_,_,_],[A,A,A]], A).
+win_game([[A,_,_],[A,_,_],[A,_,_]], A).
+win_game([[_,A,_],[_,A,_],[_,A,_]], A).
+win_game([[_,_,A],[_,_,A],[_,_,A]], A).
+win_game([[A,_,_],[_,A,_],[_,_,A]], A).
+win_game([[_,_,A],[_,A,_],[A,_,_]], A).

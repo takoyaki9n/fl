@@ -1,0 +1,104 @@
+関数・論理型プログラミング演習第12回レポート
+氏名:八尋渉
+学籍番号:05-141032
+
+問1
+ソースコード: family.pl
+実行例: なし
+考察:
+ancestorを
+ancestor(X, Y) :- ancestor(Z, Y), parent(X, Z).
+ancestor(X, Y) :- parent(X, Y).
+のように定義した場合、
+ancestor(kobo, iwao).
+を実行すると、プログラムが応答しなくなる。
+これは、prologが深さ優先探索で解を探しており、
+?- ancestor(kobo, iwao).
+| ancestor(X, Y) :- ancestor(Z, Y), parent(X, Z).
+?- ancestor(X1, iwao), parent(kobo, X1).
+| ancestor(X, Y) :- ancestor(Z, Y), parent(X, Z).
+?- ancestor(X2, iwao), parent(X1, X2), parent(kobo, X1).
+| ancestor(X, Y) :- ancestor(Z, Y), parent(X, Z).
+...
+のようにancestorを1番目のルールで無限に掘り下げ続けて、制約を満たす解を見つけられないためである。
+
+問2 
+ソースコード: nat.hs
+実行例:
+?- nat_list([z,s(z),z]).
+true.
+
+?- nat_list([z,X]).
+X = z ;
+X = s(z) ;
+X = s(s(z)) ;
+X = s(s(s(z))) ;
+X = s(s(s(s(z)))) .
+
+?- nat_list(X).
+X = [] ;
+X = [z] ;
+X = [z, z] ;
+X = [z, z, z] ;
+X = [z, z, z, z] ;
+X = [z, z, z, z, z] .
+考察:
+?- nat_list(X).
+| nat_list([]). \ nat_list([A|X]) :- nat(A), nat_list(X).
+?- {X->[]}      ?- nat(A1), nat_list(X1).{X->[A1|X1]}
+	        | nat(z).
+	        ?- nat_list(X1).{A1->z}
+	        | nat_list([]).  \ nat_list([A|X]) :- nat(A), nat_list(X).
+	        ?- {X1->[]}      ?- nat(A2), nat_list(X2).{X1->[A2|X2]}
+				 | nat(z)
+				 ...
+のように探索し、
+nat(s(X)) :- nat(X).
+が試みられないため、リストの要素にはzしか出てこない。
+nat_list(X),X=[s(Y)]
+については、まずnat_list(X)を満たすXを探してきてからX=[s(Y)]を探索するが、そのようなXは見つからないので、処理が帰ってこなくなる。
+
+問3 
+ソースコード: t3.pl, t3_2.pl
+実行例:
+?- ['t3.pl'].
+% t3.pl compiled 0.00 sec, 12,568 bytes
+true.
+
+?- tie([[z,z,z],[z,z,z],[z,z,z]], c).
+true.
+
+?- win([[z,z,z],[z,z,z],[z,z,z]], c).
+false.
+
+?- lose([[z,z,z],[z,z,z],[z,z,z]], c).
+false.
+
+?- win([[c,x,z],[z,z,z],[z,z,z]], c).
+true.
+
+?- win([[z,x,z],[z,c,z],[z,z,z]], c).
+true.
+
+?- win([[z,x,z],[c,z,z],[z,z,z]], c).
+true.
+考察:
+盤の状態をxが×、cを○、zを空白で表現した。
+t3.plでは、任意のサイズの盤での判定に対応した。
+各述語の意味配下の通り。
+col(X, Y)
+row(X, Y)
+crs(X, Y)
+「Yが二次元リストXの行・列・対角線リストである」
+win_line(X, A)
+「リストXがすべてプレイヤーAのマークで占められている」
+win_game(X, A)
+「二次元リストXにすべてプレイヤーAのマークで占められているラインが存在する」
+move(P, B, Q)
+「二次元リストPのz要素を一つプレイヤーAのマークで置き換えるとQになる」
+win・loseの終了判定ケースは、
+「自分(相手)のマークが揃っていて、相手(自分)のマークが揃っていない」
+とした。
+win_gameを判定が任意のサイズの盤で行なっているせいか、
+tie([[z,z,z],[z,z,z],[z,z,z]], c).
+の実行に11秒程度(学科PC)かかったので、盤の大きさを3x3に限定して、win_gameの判定を全パターン列挙で行うt3_2.plを作った結果、3秒程度で終わった。
