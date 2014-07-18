@@ -36,4 +36,18 @@ bfs2 t =
         case ts of
           SOr l r:ts' -> l:r:runBFS (n + 1) ts'
           _:ts'       -> runBFS (n - 1) ts'
-          
+
+iddfs :: SearchT a -> Maybe a
+iddfs t = 
+  case concatMap (go [(t, 0)]) [1..] of
+    [] -> Nothing
+    a: _ -> Just a
+  where
+    go [] limit = []
+    go ((SNone, _): x) limit = go x limit
+    go ((SUnit a, _): x) limit = [a]
+    go ((SOr l r, n): x) limit = 
+      if n < limit then
+        go ((l, n + 1):(r, n + 1):x) limit
+      else
+        go x limit
