@@ -1,9 +1,18 @@
 module NatLists where 
 import SearchT
 
--- nat_lists = go []
---   where 
---     go 
+nat_list_tree xs = SOr (SUnit xs) (foldr1 SOr (map (nat_list_tree . (:xs)) [0..]))
+
+nat_lists =  [x | SUnit x <- queue]
+  where
+    root = nat_list_tree []
+    queue = root:runBFS 1 queue
+    runBFS n ts
+      | n == 0 = []
+      | n > 0  =
+        case ts of
+          SOr l r:ts' -> l:r:runBFS (n + 1) ts'
+          _:ts'       -> runBFS (n - 1) ts'
 
 nat_lists2 = concatMap go [0..]
   where
