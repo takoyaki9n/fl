@@ -2,11 +2,9 @@ module Robo where
 import Data.Map hiding (size, map, filter, foldl)
 import Data.List hiding (insert)
 
---{-
 f1 = Field (20, 10) (14 ,2) [(12,0), (12,1),(8,2),(12,2),(12,3),(8,3),(8,4),(7,5),(8,5),(9,5),(10,5)]
 f2 = Field (20, 10) (14 ,2) [(13,1),(14,1),(15,1),(8,2),(9,2),(10,2),(11,2),(12,2),(13,2),(15,2),(8,3),(8,4),(8,5),(8,6)]
 f3 = Field (3, 3) (2 ,2) [(2, 0), (1, 1), (0, 2)]
----}
 
 type Point = (Integer, Integer)
 

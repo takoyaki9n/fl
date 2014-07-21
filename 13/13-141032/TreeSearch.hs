@@ -2,7 +2,7 @@ module TreeSearches where
 import SearchT
 import Control.Monad
 {-
-tr = SOr (SOr SNone (SUnit False)) (SUnit True)
+tr = SOr (SOr SNone (SUnit 1)) (SUnit 2)
 
 inft = SOr inft (SUnit True)
 -}
