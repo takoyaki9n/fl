@@ -1,0 +1,136 @@
+関数・論理型プログラミング演習第14回レポート
+氏名:八尋渉
+学籍番号:05-141032
+
+問1
+ソースコード: Q1.curry
+実行例: 
+> take 3 [1,2,3,4]
+[1,2,3]
+> drop 3 [1,2,3,4]
+[4]
+> sillyUnparen "(12)()"
+"12)("
+> sillyUnparen "(12)("
+"(12)("
+考察:
+take dropは、まずリストを2つに分解してから長さを調べるという実装をした。
+sillyUnparenはまず外側に"()"が付いている場合はパターンマッチで外し、そうでない時は最初を最後の文字が"("と")"でないかどうかを調べて、引数をそのまま返す。
+これだけだと空文字がNo solutionsになるので、空文字は空文字を返すことにした。
+更に、2番目の場合にガードをSuccess型にすると2回探索されるようだったので、Bool型にした。
+
+問2
+ソースコード: Unparen.curry
+実行例:
+> paren (unparen "(()())")
+"(()())"
+> unparen "(()()"
+No solution
+考察:
+unparenは、空文字ならPEmpを、"("と")"があればPSeqに間の文字列をunparenしたものを返す。
+unparen xが成功するときのxは、「"("と")"が正しく対応した、カッコのみからなる文字列」である。
+
+問3
+ソースコード: Family.curry
+実行例:
+> parent Katsuo
+Namihei
+More solutions? [Y(es)/n(o)/a(ll)] a
+Fune
+> sibling Katsuo
+Sazae
+More solutions? [Y(es)/n(o)/a(ll)] a
+Wakame
+Sazae
+Wakame
+> bloodrelative Tarao
+Masuo
+More solutions? [Y(es)/n(o)/a(ll)] a
+Sazae
+Namihei
+Fune
+Sazae
+Katsuo
+Wakame
+Sazae
+Katsuo
+Wakame
+考察:
+Prologと同じように実装した。
+
+問4
+ソースコード: Hamilton.curry
+実行例:
+> let g = Graph [1,2,3,4] [(1,[2,3,4]),(2,[3,4]),(3,[4,1])] in hamilton_path g
+[2,3,1,4]
+More solutions? [Y(es)/n(o)/a(ll)] a
+[3,1,2,4]
+[1,2,3,4]
+考察:
+グラフの型はGraphとし、枝集合は頂点とその隣接点のリストの組の連想配列で表現した(つまり有向グラフ)。
+move_fromは、ある頂点から移動可能な頂点を非決定的に返す関数で、pathは与えられたリストがグラフ上の有効歩であるという意味の述語である。
+hamiltonは、グラフの頂点集合の全順列について、それが有効な歩であるかどうかを調べることで、グラフ上のハミルトン路を返す。
+
+問5
+ソースコード: sort.pl Sort.curry
+実行例:
+$ prolog
+?- mysort([8, 9, 4, 1, 5, 2, 3, 6, 7, 0], X).
+X = [0, 1, 2, 3, 4, 5, 6, 7, 8|...].
+$ cyi
+> mysort [8, 9, 4, 1, 5, 2, 3, 6, 7, 0]
+[0,1,2,3,4,5,6,7,8,9]
+考察:
+prologは長さ10のリストのソートに1秒程度かかったが、curryはすぐ終わった。
+これは、curryが遅延評価しているためだと考えられる。
+つまり、prologは一旦順列を作ってからsortedで評価するが、curryはpermを実行しながらisSortedで評価するので、条件が偽になった時点で打切る。
+探索の様子を木にすると以下のようになる。
+1   2  3
+|\  |
+2 3 3
+|
+3
+長さnのリストについて、i番目(i=1..n)に大きい要素から探索した場合の木の全ノード数をT(n,i)とすると、式は以下のようになる。
+T(n, i) = 1 + T(n-1,i) + T(n-1, i+1) + ... + T(n-1,n-1)
+表にすると以下のようになる。
+i\n 1    2    3    4
+1   1    2    4    8
+2        1    2    4
+3             1    2
+4                  1
+ここで、T(n,i) = 2^(n-i)と仮定してみると、上の式を満たすので、これは正しい。
+全ての場合を探索する場合、
+T(n,1)+T(n,2)+...+T(n,n) = 2^n-1
+なので、最悪の場合(最小の要素がいちばんうしろにあった時)でも計算量は指数オーダーである。
+
+問6
+ソースコード: Sort.curry
+実行例:
+> mysort2 [9, 10, 18, 15, 2, 4, 7, 6, 8, 14, 16, 17, 13, 11, 5, 0, 12, 19, 1, 3]
+[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+考察:
+長さ20のリストに対して、mysortは数秒かかったが、mysort2はすぐ終わった。
+insertionsは、空リストに対して引数のリストの要素を一つづつ追加していき、その途中経過のリストを作る。
+改良型のmysortは、途中経過がすべてソート済であるようなinsetionsの結果について、その最終結果を返す。
+要するにこれは挿入ソートである。
+
+問7
+ソースコード: TickTackToe.curry
+実行例:
+> tie init3x3 O
+Success
+> win init3x3 O
+No solution
+> lose init3x3 O
+No solution
+> win [O,X,E,E,E,E,E,E,E] O
+Success
+> win [E,X,E,E,O,E,E,E,E] O
+Success
+> win [E,O,E,X,E,E,E,E,E] O
+Success
+考察:
+prologのnotとcutがcurryにはなかったので、それぞれ
+solveAll (\_ -> ...) =:= []
+once (\_ -> ...) Nothing
+で表現した。でも多分普通にhaskellっぽく書いたほうが良かった気がする。

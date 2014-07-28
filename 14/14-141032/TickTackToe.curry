@@ -21,8 +21,6 @@ win_game b | p =/= E &
               [_,_,p,_,p,_,p,_,_] =:= b) = p
   where p free
 
-takeone (x:xs) = x ? takeone xs
-
 move b p | E:b' =:= b = (p:b')
   where b' free
 move b p | n:b' =:= b & move b' p =:= b'' = n:b''

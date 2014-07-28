@@ -1,7 +1,7 @@
-take xs n | ys ++ zs =:= xs & length ys =:= n = ys 
+take n xs | ys ++ zs =:= xs & length ys =:= n = ys 
   where ys, zs free
 
-drop xs n | ys ++ zs =:= xs & length ys =:= n = zs 
+drop n xs | ys ++ zs =:= xs & length ys =:= n = zs 
   where ys, zs free
 
 last xs | _ ++ [x] =:= xs = x
