@@ -9,4 +9,4 @@ last xs | _ ++ [x] =:= xs = x
 
 sillyUnparen "" = ""
 sillyUnparen str | "(" ++ s ++ ")" =:= str = s where s free
-sillyUnparen str | head str =/= '(' ? last str =/= ')' = str
+sillyUnparen str | [head str, last str] /= "()" = str
