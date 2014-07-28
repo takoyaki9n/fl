@@ -43,7 +43,8 @@ lose b p = q =:= opposite p &
   where q free
 lose b p = q =:= opposite p & 
            elem E b =:= True & 
-           solveAll (\b' -> move b p =:= b' & (lose b' q ? tie b' q)) =:= []
-  where q, b' free
+           solveAll (\b' -> move b p =:= b' & 
+                            (lose b' q ? tie b' q)) =:= []
+  where q free
 
 tie b p = once (\_ -> solveAll (\_ -> win b p ? lose b p) =:= []) Nothing
